@@ -74,6 +74,35 @@
       </div>
     </div>
 
+    <div
+      class="h-8 flex-none bg-surface-0 border border-border mb-0.5 px-1.5 flex items-center gap-2 min-w-0 whitespace-nowrap overflow-hidden text-[10px]">
+      <span class="text-muted font-mono">PROJECT:</span>
+      <span class="text-main font-mono truncate max-w-40">{{ projectName() }}</span>
+      <span class="text-muted font-mono">SCENE:</span>
+      <select class="h-6 px-1 bg-surface-1 text-main border border-border rounded text-[10px]"
+        [value]="activeSceneId()" (change)="onSceneChange($event)">
+        @for (scene of scenes(); track scene.id) {
+        <option [value]="scene.id">{{ scene.name }}</option>
+        }
+      </select>
+      <button
+        class="h-6 px-2 border border-border rounded text-control hover:text-main hover:bg-surface-2"
+        (click)="createScene()">New Scene</button>
+      <div class="h-4 w-px bg-border mx-1"></div>
+      @for (step of creationSteps(); track step.id) {
+      <button class="h-6 px-2 border border-border rounded font-mono"
+        [ngClass]="step.done ? 'text-accent-green bg-surface-1' : 'text-control hover:text-main hover:bg-surface-2'"
+        (click)="completeStep(step.id)">
+        {{ step.done ? '✓' : '○' }} {{ step.label }}
+      </button>
+      }
+      <div class="ml-auto flex items-center gap-2 min-w-0">
+        <span class="text-muted font-mono">STATUS:</span>
+        <span class="text-main font-mono">{{ activeScene()?.status || 'draft' }}</span>
+        <span class="text-accent-blue font-mono">{{ creationProgress() }}%</span>
+      </div>
+    </div>
+
     <!-- Workspace / Scene Tabs -->
     <div
       class="h-7 flex-none flex items-end px-1 gap-0.5 text-[10px] font-mono select-none overflow-x-auto min-w-0 scrollbar-hide">

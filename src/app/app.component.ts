@@ -44,6 +44,18 @@ interface Workspace {
 	tree: TreeNode;
 }
 
+interface Scene {
+	id: string;
+	name: string;
+	status: "draft" | "ready" | "running";
+}
+
+interface CreationStep {
+	id: "scene" | "entities" | "configure" | "run" | "inspect" | "save";
+	label: string;
+	done: boolean;
+}
+
 interface Command {
 	id: string;
 	label: string;
@@ -163,6 +175,27 @@ export class AppComponent {
 	]);
 
 	activeWorkspaceId = signal<string>("ws-1");
+	projectName = signal("Lucky Robotics Project");
+	scenes = signal<Scene[]>([
+		{ id: "scene-1", name: "Rover Yard", status: "draft" },
+	]);
+	activeSceneId = signal("scene-1");
+	creationSteps = signal<CreationStep[]>([
+		{ id: "scene", label: "Create Scene", done: true },
+		{ id: "entities", label: "Add Entities", done: false },
+		{ id: "configure", label: "Configure", done: false },
+		{ id: "run", label: "Run Sim", done: false },
+		{ id: "inspect", label: "Inspect", done: false },
+		{ id: "save", label: "Save", done: false },
+	]);
+	activeScene = computed(
+		() => this.scenes().find((s) => s.id === this.activeSceneId()) || null,
+	);
+	creationProgress = computed(() => {
+		const steps = this.creationSteps();
+		const done = steps.filter((s) => s.done).length;
+		return Math.round((done / steps.length) * 100);
+	});
 
 	tree = signal<TreeNode>(JSON.parse(JSON.stringify(this.defaultSimTree)));
 
@@ -224,20 +257,20 @@ export class AppComponent {
 			id: "add-lidar",
 			label: "Spawn: 360 LiDAR Array",
 			icon: "⊕",
-			action: () => console.log("Mock: Spawning LiDAR"),
+			action: () => this.completeStep("entities"),
 		},
 		{
 			id: "add-cam",
 			label: "Spawn: Depth Camera",
 			icon: "⊕",
-			action: () => console.log("Mock: Spawning Cam"),
+			action: () => this.completeStep("configure"),
 		},
 		{
 			id: "run-blaster",
 			label: "Pipeline: Run Image-Blaster on inputs/",
 			icon: "⚡",
 			shortcut: "Cmd+B",
-			action: () => console.log("Mock: Triggering image-blaster CLI"),
+			action: () => this.completeStep("run"),
 		},
 		{
 			id: "epoch-reset",
@@ -350,6 +383,77 @@ export class AppComponent {
 	executeCommand(cmd: Command) {
 		cmd.action();
 		this.closePalette();
+	}
+
+	createScene() {
+		const newSceneId = `scene-${this.scenes().length + 1}`;
+		const newScene: Scene = {
+			id: newSceneId,
+			name: `Scene ${this.scenes().length + 1}`,
+			status: "draft",
+		};
+		this.scenes.update((prev) => [...prev, newScene]);
+		this.activeSceneId.set(newSceneId);
+		this.completeStep("scene");
+	}
+
+	switchScene(sceneId: string) {
+		this.activeSceneId.set(sceneId);
+	}
+
+	onSceneChange(event: Event) {
+		const sceneId = (event.target as HTMLSelectElement).value;
+		this.switchScene(sceneId);
+	}
+
+	completeStep(stepId: CreationStep["id"]) {
+		this.creationSteps.update((steps) =>
+			steps.map((step) =>
+				step.id === stepId ? { ...step, done: true } : step,
+			),
+		);
+		this.navigateForStep(stepId);
+		if (stepId === "run") {
+			this.scenes.update((scenes) =>
+				scenes.map((scene) =>
+					scene.id === this.activeSceneId()
+						? { ...scene, status: "running" }
+						: scene,
+				),
+			);
+		}
+		if (stepId === "save") {
+			this.scenes.update((scenes) =>
+				scenes.map((scene) =>
+					scene.id === this.activeSceneId()
+						? { ...scene, status: "ready" }
+						: scene,
+				),
+			);
+		}
+	}
+
+	private navigateForStep(stepId: CreationStep["id"]) {
+		switch (stepId) {
+			case "scene":
+				this.focusPanelByType("scene_graph");
+				break;
+			case "entities":
+				this.focusPanelByType("scene_graph");
+				break;
+			case "configure":
+				this.focusPanelByType("properties");
+				break;
+			case "run":
+				this.focusPanelByType("viewport");
+				break;
+			case "inspect":
+				this.focusPanelByType("terminal");
+				break;
+			case "save":
+				this.focusPanelByType("properties");
+				break;
+		}
 	}
 
 	// --- Workspace Methods ---
@@ -537,6 +641,27 @@ export class AppComponent {
 		if (node.id === targetId && node.type === "leaf") node.panelType = newType;
 		else if (node.type === "split")
 			node.children.forEach((c) => this.mutateType(c, targetId, newType));
+	}
+
+	private focusPanelByType(panelType: PanelType) {
+		const leaf = this.findLeafByPanelType(this.tree(), panelType);
+		if (leaf) {
+			this.setFocus(leaf.id);
+		}
+	}
+
+	private findLeafByPanelType(
+		node: TreeNode,
+		panelType: PanelType,
+	): LeafNode | null {
+		if (node.type === "leaf") {
+			return node.panelType === panelType ? node : null;
+		}
+		for (const child of node.children) {
+			const found = this.findLeafByPanelType(child, panelType);
+			if (found) return found;
+		}
+		return null;
 	}
 
 	private findSplitById(node: TreeNode, id: string): SplitNode | null {
