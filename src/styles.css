@@ -1,0 +1,82 @@
+/* With UnoCSS parsing our uno.config.ts, we can delete almost ALL of the custom CSS 
+  we previously wrote in app.component.css. 
+  
+  UnoCSS handles the background colors, text colors, hover states, and color-mix() 
+  alpha transparencies natively.
+*/
+
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@unocss;
+
+html,
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+app-root {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.text-control {
+	color: var(--text-control);
+}
+
+button {
+	appearance: none;
+	-webkit-appearance: none;
+	background: transparent;
+	color: inherit;
+}
+
+/* We only need to keep specific global overrides like the custom scrollbars */
+::ng-deep ::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::ng-deep ::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::ng-deep ::-webkit-scrollbar-thumb {
+	background: theme("colors.border");
+	border-radius: 3px;
+	border: 1px solid theme("colors.surface.1");
+}
+
+::ng-deep ::-webkit-scrollbar-thumb:hover {
+	background: theme("colors.muted");
+}
+
+/* Ensure checkboxes use our UnoCSS accent orange */
+input[type="checkbox"] {
+	accent-color: theme("colors.accent.orange");
+}
+
+/* Command Palette Animation */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.palette-animate {
+	animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

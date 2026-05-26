@@ -1,0 +1,220 @@
+/* GLOBAL RESET: Removes all default browser padding/margins and prevents scrolling */
+::ng-deep html,
+::ng-deep body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background-color: oklch(15% 0.006 95);
+}
+
+:host {
+	display: block;
+	font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+	--surface-0: oklch(15% 0.006 95);
+	--surface-1: oklch(19% 0.007 95);
+	--surface-2: oklch(24% 0.008 95);
+	--surface-3: oklch(30% 0.009 95);
+	--border: oklch(34% 0.01 95);
+
+	--text-main: oklch(92% 0.008 95);
+	--text-muted: oklch(74% 0.009 95);
+	--text-control: oklch(62% 0.01 95);
+
+	--accent-orange: oklch(70% 0.16 45);
+	--accent-blue: oklch(70% 0.16 250);
+	--accent-green: oklch(75% 0.15 140);
+}
+
+@media (color-gamut: p3) {
+	:host {
+		--accent-orange: oklch(70% 0.25 45);
+		--accent-blue: oklch(70% 0.25 250);
+		--accent-green: oklch(75% 0.25 140);
+	}
+}
+
+/* Fallback mapping for the Canvas preview environment where UnoCSS isn't running natively */
+.bg-surface-0 {
+	background-color: var(--surface-0);
+}
+
+.bg-surface-1 {
+	background-color: var(--surface-1);
+}
+
+.bg-surface-2 {
+	background-color: var(--surface-2);
+}
+
+.bg-surface-3 {
+	background-color: var(--surface-3);
+}
+
+.bg-surface-0-80 {
+	background-color: color-mix(in oklch, var(--surface-0) 80%, transparent);
+}
+
+.bg-surface-0-60 {
+	background-color: color-mix(in oklch, var(--surface-0) 60%, transparent);
+}
+
+.hover\:bg-surface-0:hover {
+	background-color: var(--surface-0);
+}
+
+.hover\:bg-surface-2:hover {
+	background-color: var(--surface-2);
+}
+
+.border-border {
+	border-color: var(--border);
+}
+
+.border-accent-blue {
+	border-color: var(--accent-blue);
+}
+
+.text-main {
+	color: var(--text-main);
+}
+
+.text-muted {
+	color: var(--text-muted);
+}
+
+.text-control {
+	color: var(--text-control);
+}
+
+.hover\:text-main:hover {
+	color: var(--text-main);
+}
+
+.placeholder\:text-muted::placeholder {
+	color: var(--text-muted);
+	opacity: 1;
+}
+
+.text-accent-orange {
+	color: var(--accent-orange);
+}
+
+.text-accent-blue {
+	color: var(--accent-blue);
+}
+
+.text-accent-green {
+	color: var(--accent-green);
+}
+
+.bg-accent-orange {
+	background-color: var(--accent-orange);
+}
+
+.bg-accent-blue {
+	background-color: var(--accent-blue);
+}
+
+.bg-accent-green {
+	background-color: var(--accent-green);
+}
+
+.ring-accent-blue {
+	--tw-ring-color: var(--accent-blue);
+}
+
+::ng-deep ::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::ng-deep ::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::ng-deep ::-webkit-scrollbar-thumb {
+	background: var(--border);
+	border-radius: 3px;
+	border: 1px solid var(--surface-1);
+}
+
+::ng-deep ::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+input[type="checkbox"] {
+	accent-color: var(--accent-orange);
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.palette-animate {
+	animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.app-shell {
+	letter-spacing: 0.01em;
+	color-scheme: dark;
+}
+
+@media (max-width: 1200px) {
+	.app-shell {
+		font-size: 12px;
+	}
+}
+
+/* Enforce dense dark control styling across native form elements */
+:host :is(input, select, textarea) {
+	color: var(--text-main);
+	border-color: var(--border);
+}
+
+:host button {
+	color: inherit;
+}
+
+:host :is(input[type="text"], input[type="number"], select, textarea) {
+	background-color: var(--surface-0);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+}
+
+:host select {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background-image:
+		linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+		linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+	background-position:
+		calc(100% - 12px) calc(50% - 2px),
+		calc(100% - 8px) calc(50% - 2px);
+	background-size:
+		4px 4px,
+		4px 4px;
+	background-repeat: no-repeat;
+	padding-right: 20px;
+}
+
+:host select option {
+	background-color: var(--surface-1);
+	color: var(--text-main);
+}
+
+.split-handle-x,
+.split-handle-y {
+	position: relative;
+	z-index: 20;
+}
