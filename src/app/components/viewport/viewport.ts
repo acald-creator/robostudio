@@ -22,7 +22,7 @@ CameraControls.install({ THREE });
 	styleUrl: "./viewport.css",
 })
 export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
-	@Input() sceneId: string = "ws-1";
+	@Input() sceneId: string = "scene-1";
 
 	@ViewChild("canvas", { static: true })
 	canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -49,6 +49,7 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 	private shoulder!: THREE.Group;
 	private elbow!: THREE.Group;
 	private wrist!: THREE.Group;
+	private carbuncleGroup!: THREE.Group;
 
 	private time = 0;
 	private readonly minCameraRadius = 2;
@@ -79,8 +80,10 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 	}
 
 	private updateSceneVisibility() {
-		if (this.roverGroup) this.roverGroup.visible = this.sceneId === "ws-1";
-		if (this.armGroup) this.armGroup.visible = this.sceneId === "ws-2";
+		if (this.roverGroup) this.roverGroup.visible = this.sceneId === "scene-1";
+		if (this.armGroup) this.armGroup.visible = this.sceneId === "scene-2";
+		if (this.carbuncleGroup)
+			this.carbuncleGroup.visible = this.sceneId === "scene-3";
 	}
 
 	ngOnDestroy() {
@@ -135,6 +138,7 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 
 		this.buildRover();
 		this.buildRobotArm();
+		this.buildCarbunclePlaceholder();
 		this.updateSceneVisibility();
 
 		this.cameraControls = new CameraControls(this.camera, canvas);
@@ -376,6 +380,50 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 
 		this.elbow.add(this.wrist);
 		this.scene.add(this.armGroup);
+	}
+
+	private buildCarbunclePlaceholder() {
+		this.carbuncleGroup = new THREE.Group();
+
+		const bodyMat = new THREE.MeshStandardMaterial({
+			color: 0x6d7ff0,
+			roughness: 0.25,
+			metalness: 0.05,
+		});
+		const earMat = new THREE.MeshStandardMaterial({
+			color: 0x9ea7ff,
+			roughness: 0.2,
+			metalness: 0.03,
+		});
+		const eyeMat = new THREE.MeshStandardMaterial({
+			color: 0x66eeff,
+			emissive: 0x44ccff,
+			emissiveIntensity: 0.9,
+		});
+
+		const body = new THREE.Mesh(new THREE.SphereGeometry(0.9, 24, 24), bodyMat);
+		body.position.y = 1;
+		this.carbuncleGroup.add(body);
+
+		const earL = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.75, 18), earMat);
+		earL.position.set(-0.36, 1.85, -0.05);
+		earL.rotation.z = 0.28;
+		this.carbuncleGroup.add(earL);
+
+		const earR = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.75, 18), earMat);
+		earR.position.set(0.36, 1.85, -0.05);
+		earR.rotation.z = -0.28;
+		this.carbuncleGroup.add(earR);
+
+		const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), eyeMat);
+		eyeL.position.set(-0.2, 1.05, 0.82);
+		this.carbuncleGroup.add(eyeL);
+
+		const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), eyeMat);
+		eyeR.position.set(0.2, 1.05, 0.82);
+		this.carbuncleGroup.add(eyeR);
+
+		this.scene.add(this.carbuncleGroup);
 	}
 
 	private setupResizeObserver() {

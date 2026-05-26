@@ -177,9 +177,12 @@ export class AppComponent {
 	activeWorkspaceId = signal<string>("ws-1");
 	projectName = signal("Lucky Robotics Project");
 	scenes = signal<Scene[]>([
+		{ id: "scene-0", name: "Blank Scene (User Start)", status: "draft" },
 		{ id: "scene-1", name: "Rover Yard", status: "draft" },
+		{ id: "scene-2", name: "Robot Arm Assembly Lab", status: "draft" },
+		{ id: "scene-3", name: "Carbuncle-Style Familiar Scene", status: "draft" },
 	]);
-	activeSceneId = signal("scene-1");
+	activeSceneId = signal("scene-0");
 	creationSteps = signal<CreationStep[]>([
 		{ id: "scene", label: "Create Scene", done: true },
 		{ id: "entities", label: "Add Entities", done: false },
@@ -195,6 +198,22 @@ export class AppComponent {
 		const steps = this.creationSteps();
 		const done = steps.filter((s) => s.done).length;
 		return Math.round((done / steps.length) * 100);
+	});
+	nextPendingStep = computed(
+		() => this.creationSteps().find((s) => !s.done) || null,
+	);
+	currentStepHint = computed(() => {
+		const next = this.nextPendingStep();
+		if (!next) return "All core creation steps complete.";
+		const hints: Record<CreationStep["id"], string> = {
+			scene: "Create or choose a scene as your world container.",
+			entities: "Add robot, sensors, and environment entities.",
+			configure: "Tune transforms and sensor/runtime parameters.",
+			run: "Start simulation and verify behavior in viewport.",
+			inspect: "Inspect logs, metrics, and sensor outputs.",
+			save: "Save this scene state for reuse and iteration.",
+		};
+		return hints[next.id];
 	});
 
 	tree = signal<TreeNode>(JSON.parse(JSON.stringify(this.defaultSimTree)));
@@ -431,6 +450,11 @@ export class AppComponent {
 				),
 			);
 		}
+	}
+
+	completeNextStep() {
+		const next = this.nextPendingStep();
+		if (next) this.completeStep(next.id);
 	}
 
 	private navigateForStep(stepId: CreationStep["id"]) {

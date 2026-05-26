@@ -6,7 +6,8 @@
         <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">CAM:
             MAIN_ORBIT</span>
         <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">
-            {{ sceneId === 'ws-1' ? 'LIDAR: ACTIVE (10Hz)' : 'KINEMATICS: SOLVING' }}
+            {{ sceneId === 'scene-1' ? 'LIDAR: ACTIVE (10Hz)' : (sceneId === 'scene-2' ? 'KINEMATICS: SOLVING' :
+            'FAMILIAR: IDLE AURA') }}
         </span>
         <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">
             ZOOM: {{ zoomPercent }}%

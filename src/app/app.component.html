@@ -74,32 +74,38 @@
       </div>
     </div>
 
-    <div
-      class="h-8 flex-none bg-surface-0 border border-border mb-0.5 px-1.5 flex items-center gap-2 min-w-0 whitespace-nowrap overflow-hidden text-[10px]">
-      <span class="text-muted font-mono">PROJECT:</span>
-      <span class="text-main font-mono truncate max-w-40">{{ projectName() }}</span>
-      <span class="text-muted font-mono">SCENE:</span>
-      <select class="h-6 px-1 bg-surface-1 text-main border border-border rounded text-[10px]"
-        [value]="activeSceneId()" (change)="onSceneChange($event)">
-        @for (scene of scenes(); track scene.id) {
-        <option [value]="scene.id">{{ scene.name }}</option>
+    <div class="h-14 flex-none bg-surface-0 border border-border mb-0.5 px-1.5 py-1 text-[10px] min-w-0">
+      <div class="flex items-center gap-2 min-w-0 whitespace-nowrap overflow-x-auto">
+        <span class="text-muted font-mono">PROJECT:</span>
+        <span class="text-main font-mono truncate max-w-40">{{ projectName() }}</span>
+        <span class="text-muted font-mono">SCENE:</span>
+        <select class="h-6 px-1 bg-surface-1 text-main border border-border rounded text-[10px]"
+          [value]="activeSceneId()" (change)="onSceneChange($event)">
+          @for (scene of scenes(); track scene.id) {
+          <option [value]="scene.id">{{ scene.name }}</option>
+          }
+        </select>
+        <button class="h-6 px-2 border border-border rounded text-control hover:text-main hover:bg-surface-2"
+          (click)="createScene()">New Scene</button>
+        <button class="h-6 px-2 border border-border rounded text-control hover:text-main hover:bg-surface-2"
+          (click)="completeNextStep()">
+          Next Step: {{ nextPendingStep()?.label || 'Done' }}
+        </button>
+        <div class="ml-auto flex items-center gap-2">
+          <span class="text-muted font-mono">STATUS:</span>
+          <span class="text-main font-mono">{{ activeScene()?.status || 'draft' }}</span>
+          <span class="text-accent-blue font-mono">{{ creationProgress() }}%</span>
+        </div>
+      </div>
+      <div class="mt-1 flex items-center gap-2 min-w-0 overflow-x-auto whitespace-nowrap">
+        @for (step of creationSteps(); track step.id) {
+        <button class="h-5 px-2 border border-border rounded font-mono"
+          [ngClass]="step.done ? 'text-accent-green bg-surface-1' : 'text-control hover:text-main hover:bg-surface-2'"
+          (click)="completeStep(step.id)">
+          {{ step.done ? '✓' : '○' }} {{ step.label }}
+        </button>
         }
-      </select>
-      <button
-        class="h-6 px-2 border border-border rounded text-control hover:text-main hover:bg-surface-2"
-        (click)="createScene()">New Scene</button>
-      <div class="h-4 w-px bg-border mx-1"></div>
-      @for (step of creationSteps(); track step.id) {
-      <button class="h-6 px-2 border border-border rounded font-mono"
-        [ngClass]="step.done ? 'text-accent-green bg-surface-1' : 'text-control hover:text-main hover:bg-surface-2'"
-        (click)="completeStep(step.id)">
-        {{ step.done ? '✓' : '○' }} {{ step.label }}
-      </button>
-      }
-      <div class="ml-auto flex items-center gap-2 min-w-0">
-        <span class="text-muted font-mono">STATUS:</span>
-        <span class="text-main font-mono">{{ activeScene()?.status || 'draft' }}</span>
-        <span class="text-accent-blue font-mono">{{ creationProgress() }}%</span>
+        <span class="text-muted font-mono pl-2">Current: {{ currentStepHint() }}</span>
       </div>
     </div>
 
@@ -240,7 +246,7 @@
     <div class="flex-1 overflow-hidden relative text-xs bg-surface-0 min-w-0 min-h-0">
       @switch (node.panelType) {
       @case ('viewport') {
-      <app-three-viewport class="w-full h-full block" [sceneId]="activeWorkspaceId()"></app-three-viewport>
+      <app-three-viewport class="w-full h-full block" [sceneId]="activeSceneId()"></app-three-viewport>
       }
       @case ('scene_graph') {
       <div class="w-full h-full bg-surface-0 p-1.5 overflow-auto font-mono text-[11px] whitespace-nowrap">
