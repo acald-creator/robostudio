@@ -229,6 +229,21 @@
         <span class="px-1 py-0.5 border border-border rounded">Metrics</span>
       </div>
 
+      <div class="hidden md:flex items-center gap-0.5 text-muted flex-none mr-1 whitespace-nowrap">
+        <button
+          class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-[10px]"
+          title="Dock Left" (click)="dock($event, node.id, 'left')">←</button>
+        <button
+          class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-[10px]"
+          title="Dock Right" (click)="dock($event, node.id, 'right')">→</button>
+        <button
+          class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-[10px]"
+          title="Dock Top" (click)="dock($event, node.id, 'top')">↑</button>
+        <button
+          class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-[10px]"
+          title="Dock Bottom" (click)="dock($event, node.id, 'bottom')">↓</button>
+      </div>
+
       <div class="flex items-center gap-0.5 text-muted flex-none whitespace-nowrap">
         <button
           class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-[10px]"

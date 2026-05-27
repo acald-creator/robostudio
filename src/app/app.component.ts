@@ -18,6 +18,7 @@ type PanelType =
 	| "node_editor"
 	| "properties"
 	| "terminal";
+type DockZone = "left" | "right" | "top" | "bottom";
 
 interface LeafNode {
 	id: string;
@@ -273,6 +274,30 @@ export class AppComponent {
 			action: () => this.closePane(this.activePanelId()),
 		},
 		{
+			id: "dock-left",
+			label: "Layout: Dock Active Panel Left",
+			icon: "◧",
+			action: () => this.dockPane(this.activePanelId(), "left"),
+		},
+		{
+			id: "dock-right",
+			label: "Layout: Dock Active Panel Right",
+			icon: "◨",
+			action: () => this.dockPane(this.activePanelId(), "right"),
+		},
+		{
+			id: "dock-top",
+			label: "Layout: Dock Active Panel Top",
+			icon: "◩",
+			action: () => this.dockPane(this.activePanelId(), "top"),
+		},
+		{
+			id: "dock-bottom",
+			label: "Layout: Dock Active Panel Bottom",
+			icon: "◪",
+			action: () => this.dockPane(this.activePanelId(), "bottom"),
+		},
+		{
 			id: "add-lidar",
 			label: "Spawn: 360 LiDAR Array",
 			icon: "⊕",
@@ -525,6 +550,10 @@ export class AppComponent {
 		event.stopPropagation();
 		this.closePane(id);
 	}
+	dock(event: MouseEvent, id: string, zone: DockZone) {
+		event.stopPropagation();
+		this.dockPane(id, zone);
+	}
 	beginResize(
 		event: MouseEvent,
 		parentId: string,
@@ -656,6 +685,38 @@ export class AppComponent {
 		}
 	}
 
+	dockPane(targetId: string, zone: DockZone) {
+		const targetLeaf = this.findLeafById(this.tree(), targetId);
+		if (!targetLeaf) return;
+
+		const cleanedTree = JSON.parse(JSON.stringify(this.tree())) as TreeNode;
+		this.mutateClose(cleanedTree, targetId, () => {});
+
+		const dockedLeafId = this.getId();
+		const dockedLeaf: LeafNode = {
+			id: dockedLeafId,
+			type: "leaf",
+			panelType: targetLeaf.panelType,
+			focused: true,
+			ratio: 0.9,
+		};
+
+		const isHorizontal = zone === "left" || zone === "right";
+		const newRoot: SplitNode = {
+			id: this.getId(),
+			type: "split",
+			direction: isHorizontal ? "horizontal" : "vertical",
+			ratio: 1,
+			children:
+				zone === "left" || zone === "top"
+					? [dockedLeaf, cleanedTree]
+					: [cleanedTree, dockedLeaf],
+		};
+
+		this.tree.set(newRoot);
+		this.setFocus(dockedLeafId);
+	}
+
 	setType(targetId: string, newType: PanelType) {
 		const clone = JSON.parse(JSON.stringify(this.tree()));
 		this.mutateType(clone, targetId, newType);
@@ -695,6 +756,15 @@ export class AppComponent {
 				const found = this.findSplitById(child, id);
 				if (found) return found;
 			}
+		}
+		return null;
+	}
+
+	private findLeafById(node: TreeNode, id: string): LeafNode | null {
+		if (node.type === "leaf") return node.id === id ? node : null;
+		for (const child of node.children) {
+			const found = this.findLeafById(child, id);
+			if (found) return found;
 		}
 		return null;
 	}
