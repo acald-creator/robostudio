@@ -23,6 +23,11 @@ CameraControls.install({ THREE });
 })
 export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 	@Input() sceneId: string = "scene-1";
+	@Input() jointAngles: { shoulder: number; elbow: number; wrist: number } = {
+		shoulder: -0.28,
+		elbow: 1.22,
+		wrist: 0.52,
+	};
 
 	@ViewChild("canvas", { static: true })
 	canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -282,14 +287,14 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		this.armGroup = new THREE.Group();
 
 		const orangeMat = new THREE.MeshStandardMaterial({
-			color: 0xff6600,
-			roughness: 0.2,
-			metalness: 0.1,
+			color: 0xc87a2a,
+			roughness: 0.5,
+			metalness: 0.35,
 		});
 		const slateMat = new THREE.MeshStandardMaterial({
-			color: 0x8a8a98,
-			roughness: 0.1,
-			metalness: 0.2,
+			color: 0x667a68,
+			roughness: 0.62,
+			metalness: 0.18,
 		});
 		const darkMat = new THREE.MeshStandardMaterial({
 			color: 0x1f1f26,
@@ -302,83 +307,81 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 			emissiveIntensity: 2,
 		});
 
-		const baseGeo = new THREE.CylinderGeometry(1, 1, 0.4, 32);
-		const baseMesh = new THREE.Mesh(baseGeo, darkMat);
-		baseMesh.position.y = 0.2;
-		baseMesh.castShadow = true;
-		baseMesh.receiveShadow = true;
-		this.armGroup.add(baseMesh);
+		const base = new THREE.Mesh(
+			new THREE.CylinderGeometry(0.52, 0.42, 0.3, 32),
+			darkMat,
+		);
+		base.position.y = 0.15;
+		base.castShadow = true;
+		base.receiveShadow = true;
+		this.armGroup.add(base);
 
-		this.shoulder = new THREE.Group();
-		this.shoulder.position.y = 0.4;
-
-		const shoulderMotor = new THREE.Mesh(
-			new THREE.CylinderGeometry(0.6, 0.6, 0.8, 16),
+		const shoulderJoint = new THREE.Mesh(
+			new THREE.SphereGeometry(0.18, 24, 24),
 			orangeMat,
 		);
-		shoulderMotor.rotation.x = Math.PI / 2;
-		shoulderMotor.castShadow = true;
-		this.shoulder.add(shoulderMotor);
+		shoulderJoint.castShadow = true;
 
+		this.shoulder = new THREE.Group();
+		this.shoulder.position.set(0, 0.42, 0);
+		this.shoulder.add(shoulderJoint);
+
+		const upperArmLength = 1.05;
 		const upperArm = new THREE.Mesh(
-			new THREE.BoxGeometry(0.4, 2.5, 0.4),
+			new THREE.BoxGeometry(0.24, upperArmLength, 0.24),
 			slateMat,
 		);
-		upperArm.position.y = 1.25;
+		upperArm.position.y = upperArmLength * 0.5;
 		upperArm.castShadow = true;
 		this.shoulder.add(upperArm);
 
-		this.armGroup.add(this.shoulder);
-
 		this.elbow = new THREE.Group();
-		this.elbow.position.y = 2.5;
+		this.elbow.position.y = upperArmLength;
+		this.shoulder.add(this.elbow);
 
-		const elbowMotor = new THREE.Mesh(
-			new THREE.CylinderGeometry(0.5, 0.5, 0.6, 16),
-			darkMat,
+		const elbowJoint = new THREE.Mesh(
+			new THREE.SphereGeometry(0.16, 24, 24),
+			orangeMat,
 		);
-		elbowMotor.rotation.z = Math.PI / 2;
-		elbowMotor.castShadow = true;
-		this.elbow.add(elbowMotor);
+		elbowJoint.castShadow = true;
+		this.elbow.add(elbowJoint);
 
+		const lowerArmLength = 1.0;
 		const lowerArm = new THREE.Mesh(
-			new THREE.BoxGeometry(0.3, 2, 0.3),
+			new THREE.BoxGeometry(0.22, lowerArmLength, 0.22),
 			slateMat,
 		);
-		lowerArm.position.y = 1;
+		lowerArm.position.y = lowerArmLength * 0.5;
 		lowerArm.castShadow = true;
 		this.elbow.add(lowerArm);
 
-		this.shoulder.add(this.elbow);
-
 		this.wrist = new THREE.Group();
-		this.wrist.position.y = 2;
+		this.wrist.position.y = lowerArmLength;
+		this.elbow.add(this.wrist);
 
-		const wristMotor = new THREE.Mesh(
-			new THREE.CylinderGeometry(0.4, 0.4, 0.4, 16),
+		const wristJoint = new THREE.Mesh(
+			new THREE.SphereGeometry(0.14, 24, 24),
 			orangeMat,
 		);
-		wristMotor.castShadow = true;
-		this.wrist.add(wristMotor);
+		wristJoint.castShadow = true;
+		this.wrist.add(wristJoint);
 
-		const gripperBase = new THREE.Mesh(
-			new THREE.BoxGeometry(0.6, 0.2, 0.2),
-			slateMat,
-		);
-		gripperBase.position.y = 0.3;
-		gripperBase.castShadow = true;
-		this.wrist.add(gripperBase);
+		const wristLink = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.48, 0.18), slateMat);
+		wristLink.position.y = 0.24;
+		wristLink.castShadow = true;
+		this.wrist.add(wristLink);
 
-		const clawGeo = new THREE.BoxGeometry(0.05, 0.6, 0.1);
+		const clawGeo = new THREE.BoxGeometry(0.05, 0.28, 0.1);
 		const leftClaw = new THREE.Mesh(clawGeo, glowMat);
-		leftClaw.position.set(-0.25, 0.6, 0);
+		leftClaw.position.set(-0.1, 0.52, 0.06);
 		this.wrist.add(leftClaw);
 
 		const rightClaw = new THREE.Mesh(clawGeo, glowMat);
-		rightClaw.position.set(0.25, 0.6, 0);
+		rightClaw.position.set(0.1, 0.52, 0.06);
 		this.wrist.add(rightClaw);
 
-		this.elbow.add(this.wrist);
+		this.armGroup.add(this.shoulder);
+		this.armGroup.position.x = -0.4;
 		this.scene.add(this.armGroup);
 	}
 
@@ -507,16 +510,31 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		// Animate Arm if visible
 		if (this.armGroup?.visible) {
 			this.time += 0.02;
-			if (this.shoulder) {
-				this.shoulder.rotation.y = Math.sin(this.time * 0.5) * (Math.PI / 2);
-				this.shoulder.rotation.z = Math.sin(this.time * 0.8) * 0.5;
-			}
-			if (this.elbow) {
-				this.elbow.rotation.x =
-					(Math.abs(Math.sin(this.time)) * -Math.PI) / 1.5;
-			}
-			if (this.wrist) {
-				this.wrist.rotation.y = this.time * 2;
+			if (this.sceneId === "scene-2") {
+				if (this.shoulder) {
+					this.shoulder.rotation.y = 0;
+					this.shoulder.rotation.z = this.jointAngles.shoulder;
+				}
+				if (this.elbow) {
+					this.elbow.rotation.z = this.jointAngles.elbow;
+				}
+				if (this.wrist) {
+					this.wrist.rotation.z = this.jointAngles.wrist;
+					this.wrist.rotation.y = 0;
+				}
+			} else {
+				if (this.shoulder) {
+					this.shoulder.rotation.y = Math.sin(this.time * 0.35) * 0.45;
+					this.shoulder.rotation.z = Math.sin(this.time * 0.8) * 0.55;
+				}
+				if (this.elbow) {
+					this.elbow.rotation.z =
+						-0.25 + Math.abs(Math.sin(this.time * 1.1)) * 1.15;
+				}
+				if (this.wrist) {
+					this.wrist.rotation.z = Math.sin(this.time * 1.7) * 0.6;
+					this.wrist.rotation.y = Math.sin(this.time * 0.9) * 0.35;
+				}
 			}
 		}
 

@@ -203,6 +203,11 @@ export class AppComponent {
 	nextPendingStep = computed(
 		() => this.creationSteps().find((s) => !s.done) || null,
 	);
+	armJoints = signal({
+		shoulder: -0.28,
+		elbow: 1.22,
+		wrist: 0.52,
+	});
 	currentStepHint = computed(() => {
 		const next = this.nextPendingStep();
 		if (!next) return "All core creation steps complete.";
@@ -480,6 +485,15 @@ export class AppComponent {
 	completeNextStep() {
 		const next = this.nextPendingStep();
 		if (next) this.completeStep(next.id);
+	}
+
+	updateArmJoint(
+		joint: "shoulder" | "elbow" | "wrist",
+		event: Event,
+	) {
+		const value = Number.parseFloat((event.target as HTMLInputElement).value);
+		if (Number.isNaN(value)) return;
+		this.armJoints.update((prev) => ({ ...prev, [joint]: value }));
 	}
 
 	private navigateForStep(stepId: CreationStep["id"]) {
