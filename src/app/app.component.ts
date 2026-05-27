@@ -182,7 +182,7 @@ export class AppComponent {
 		{ id: "scene-2", name: "Robot Arm Assembly Lab", status: "draft" },
 		{ id: "scene-3", name: "Carbuncle-Style Familiar Scene", status: "draft" },
 	]);
-	activeSceneId = signal("scene-0");
+	activeSceneId = signal("scene-1");
 	creationSteps = signal<CreationStep[]>([
 		{ id: "scene", label: "Create Scene", done: true },
 		{ id: "entities", label: "Add Entities", done: false },
