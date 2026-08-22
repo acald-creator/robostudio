@@ -82,10 +82,10 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 	}
 
 	ngOnChanges(changes: SimpleChanges) {
-		if (changes.sceneId && this.scene) {
+		if (changes["sceneId"] && this.scene) {
 			this.updateSceneVisibility();
 		}
-		if (changes.compact && this.renderer) {
+		if (changes["compact"] && this.renderer) {
 			this.applyPerformanceMode();
 			this.updateViewportSize(true);
 		}
