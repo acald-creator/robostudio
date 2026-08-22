@@ -2,6 +2,7 @@
     <canvas #canvas class="absolute inset-0 block outline-none touch-none select-none" [ngClass]="cursorClass"></canvas>
 
     <!-- Overlay UI -->
+    @if (!compact) {
     <div class="absolute top-2 left-2 pointer-events-none z-10 flex flex-col gap-1">
         <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">CAM:
             MAIN_ORBIT</span>
@@ -29,22 +30,24 @@
         <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[9px] border border-border">ENGINE:
             THREE.JS | SHADERS: COMPILED</span>
     </div>
+    }
 
-    <div class="absolute bottom-2 left-2 z-10 pointer-events-auto flex items-center gap-1">
+    <div class="absolute z-10 pointer-events-auto flex items-center gap-1 viewport-zoom-bar"
+        [class.viewport-zoom-bar-compact]="compact">
         <button
-            class="h-6 px-2 font-mono text-[10px] text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100"
+            class="font-mono text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
             (click)="zoomIn()"
             title="Zoom In">
             +
         </button>
         <button
-            class="h-6 px-2 font-mono text-[10px] text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100"
+            class="font-mono text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
             (click)="zoomOut()"
             title="Zoom Out">
             -
         </button>
         <button
-            class="h-6 px-2 font-mono text-[10px] text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100"
+            class="font-mono text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
             (click)="resetView()"
             title="Reset View to Grid">
             Reset
