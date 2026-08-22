@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	defaultSceneForWorkspace,
 	MOBILE_BREAKPOINT_PX,
 	MOBILE_TABS,
 	type MobilePanelType,
@@ -41,5 +42,11 @@ describe("mobile shell mapping", () => {
 		expect(mobileMediaQuery()).toContain("max-width");
 		const unusedTab: MobileTab = "view";
 		expect(mobileTabToPanelType(unusedTab)).toBe("viewport");
+	});
+
+	it("maps workspaces to the matching 3D scene", () => {
+		expect(defaultSceneForWorkspace("ws-1")).toBe("scene-1");
+		expect(defaultSceneForWorkspace("ws-2")).toBe("scene-2");
+		expect(defaultSceneForWorkspace("ws-unknown")).toBeUndefined();
 	});
 });

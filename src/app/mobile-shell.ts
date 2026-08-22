@@ -50,3 +50,14 @@ export function mobileTabToPanelType(tab: MobileTab): MobilePanelType {
 export function panelTypeToMobileTab(panelType: MobilePanelType): MobileTab {
 	return PANEL_TO_TAB[panelType];
 }
+
+const WORKSPACE_DEFAULT_SCENE: Record<string, string> = {
+	"ws-1": "scene-1",
+	"ws-2": "scene-2",
+};
+
+export function defaultSceneForWorkspace(
+	workspaceId: string,
+): string | undefined {
+	return WORKSPACE_DEFAULT_SCENE[workspaceId];
+}

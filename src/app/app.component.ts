@@ -10,6 +10,7 @@ import {
 } from "@angular/core";
 import { Viewport } from "./components/viewport/viewport";
 import {
+	defaultSceneForWorkspace,
 	MOBILE_TABS,
 	type MobileTab,
 	mobileMediaQuery,
@@ -567,6 +568,9 @@ export class AppComponent implements OnDestroy {
 
 			const firstLeaf = this.findFirstLeaf(newWs.tree);
 			if (firstLeaf) this.setFocus(firstLeaf.id);
+
+			const sceneId = defaultSceneForWorkspace(id);
+			if (sceneId) this.activeSceneId.set(sceneId);
 		}
 	}
 
