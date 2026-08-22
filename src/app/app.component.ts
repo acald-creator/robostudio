@@ -176,7 +176,7 @@ export class AppComponent {
 	]);
 
 	activeWorkspaceId = signal<string>("ws-1");
-	projectName = signal("Lucky Robotics Project");
+	projectName = signal("Untitled Project");
 	scenes = signal<Scene[]>([
 		{ id: "scene-0", name: "Blank Scene (User Start)", status: "draft" },
 		{ id: "scene-1", name: "Rover Yard", status: "draft" },
