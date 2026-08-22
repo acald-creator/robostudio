@@ -34,7 +34,7 @@
 		"@angular/build": "^20.1.4",
 		"@angular/cli": "^20.1.4",
 		"@angular/compiler-cli": "^20.1.4",
-		"@biomejs/biome": "2.4.15",
+		"@biomejs/biome": "2.5.9",
 		"@tauri-apps/cli": "^2",
 		"@types/node": "^25.9.1",
 		"@types/three": "^0.184.1",
