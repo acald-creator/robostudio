@@ -1,11 +1,11 @@
-<div class="h-full w-full bg-surface-0 text-main flex overflow-hidden app-shell relative">
+<div class="h-full w-full bg-surface-0 text-main flex overflow-hidden app-shell relative" [class.is-mobile]="isMobile()">
 
   <!-- Command Palette Overlay -->
   @if (paletteOpen()) {
-  <div class="absolute inset-0 z-50 flex items-start justify-center pt-[15vh] bg-surface-0-60 backdrop-blur-sm"
+  <div class="absolute inset-0 z-50 flex items-start justify-center pt-[15vh] bg-surface-0-60 backdrop-blur-sm palette-overlay"
     (click)="closePalette()">
     <div
-      class="w-full max-w-xl bg-surface-1 border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden palette-animate"
+      class="w-full max-w-xl bg-surface-1 border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden palette-animate palette-panel"
       (click)="$event.stopPropagation()">
 
       <div class="flex items-center px-4 py-3 border-b border-border bg-surface-0">
@@ -14,7 +14,7 @@
           class="flex-1 bg-transparent border-none outline-none text-main text-sm font-mono placeholder:text-muted"
           placeholder="Type a command or search..." [value]="paletteSearch()" (input)="updateSearch($event)"
           (keydown)="handlePaletteKeydown($event)">
-        <span class="text-muted text-[10px] bg-surface-1 px-1.5 py-0.5 rounded border border-border">ESC to close</span>
+        <span class="text-muted text-[10px] bg-surface-1 px-1.5 py-0.5 rounded border border-border palette-esc">ESC to close</span>
       </div>
 
       <div class="max-h-[400px] overflow-y-auto py-2">
@@ -22,7 +22,7 @@
         <div class="px-4 py-8 text-center text-muted text-xs">No matching commands found.</div>
         }
         @for (cmd of filteredCommands(); track cmd.id; let i = $index) {
-        <div class="flex items-center justify-between px-4 py-2 cursor-pointer border-l-2"
+        <div class="flex items-center justify-between px-4 py-2 cursor-pointer border-l-2 palette-cmd"
           [ngClass]="i === paletteSelectedIndex() ? 'bg-surface-2 border-accent-blue' : 'border-transparent hover:bg-surface-0'"
           (click)="executeCommand(cmd)" (mouseenter)="setSelectedIndex(i)">
           <div class="flex items-center gap-3">
@@ -40,6 +40,7 @@
   </div>
   }
 
+  @if (!isMobile()) {
   <!-- Ultra-thin Left Activity Bar -->
   <div class="w-10 bg-surface-0 border-r border-border flex flex-col items-center py-2 gap-3 z-20 flex-none">
     <div
@@ -48,7 +49,7 @@
     <div class="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-muted hover:text-main"
       title="Explorer">◨</div>
     <div class="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-muted hover:text-main"
-      title="Search">⌕</div>
+      title="Search" (click)="togglePalette()">⌕</div>
     <div class="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-muted hover:text-main"
       title="Job Queue">⚡</div>
     <div class="flex-1"></div>
@@ -180,6 +181,48 @@
       </div>
     </div>
   </div>
+  } @else {
+  <div class="mobile-shell">
+    <header class="mobile-topbar">
+      <div class="mobile-mark" title="RoboStudio">R</div>
+      <select class="mobile-scene-select" [value]="activeSceneId()" (change)="onSceneChange($event)">
+        @for (scene of scenes(); track scene.id) {
+        <option [value]="scene.id">{{ scene.name }}</option>
+        }
+      </select>
+      <button class="mobile-icon-btn" type="button" (click)="completeNextStep()"
+        [title]="'Next: ' + (nextPendingStep()?.label || 'Done')">
+        {{ nextPendingStep() ? '▶' : '✓' }}
+      </button>
+      <button class="mobile-icon-btn" type="button" (click)="togglePalette()" title="Command palette">⌕</button>
+    </header>
+
+    <div class="mobile-workspace-row">
+      @for (ws of workspaces(); track ws.id) {
+      <button type="button" class="mobile-ws-chip"
+        [class.is-active]="activeWorkspaceId() === ws.id"
+        (click)="switchWorkspace(ws.id)">
+        {{ ws.icon }} {{ ws.name }}
+      </button>
+      }
+      <span class="mobile-status">{{ activeScene()?.status || 'draft' }} · {{ creationProgress() }}%</span>
+    </div>
+
+    <main class="mobile-main">
+      <ng-container *ngTemplateOutlet="panelBody; context: { $implicit: mobilePanelType() }"></ng-container>
+    </main>
+
+    <nav class="mobile-nav" aria-label="Workbench">
+      @for (tab of mobileTabs; track tab.id) {
+      <button type="button" class="mobile-nav-btn" [class.is-active]="mobileTab() === tab.id"
+        (click)="setMobileTab(tab.id)">
+        <span class="mobile-nav-icon">{{ tab.icon }}</span>
+        <span>{{ tab.label }}</span>
+      </button>
+      }
+    </nav>
+  </div>
+  }
 
 </div>
 
@@ -259,191 +302,195 @@
 
     <!-- Content Area -->
     <div class="flex-1 overflow-hidden relative text-xs bg-surface-0 min-w-0 min-h-0">
-      @switch (node.panelType) {
-      @case ('viewport') {
-      <app-three-viewport class="w-full h-full block" [sceneId]="activeSceneId()"
-        [jointAngles]="armJoints()"></app-three-viewport>
-      }
-      @case ('scene_graph') {
-      <div class="w-full h-full bg-surface-0 p-1.5 overflow-auto font-mono text-[11px] whitespace-nowrap">
-        <div class="text-[9px] uppercase text-muted mb-1 tracking-wider">Hierarchy / Scene Graph</div>
-        <ul class="space-y-px min-w-max">
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer text-main"><span
-              class="text-muted text-[9px]">▼</span> sim_environment_01</li>
-
-          @if (activeWorkspaceId() === 'ws-1') {
-          <li class="flex items-center gap-1 bg-surface-2 px-1 rounded cursor-pointer pl-4 text-accent-orange"><span
-              class="text-muted text-[9px]">▼</span> robot_agent_alpha</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
-              class="text-muted text-[9px]">○</span> chassis_mesh</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
-              class="text-muted text-[9px]">○</span> lidar_sensor_array</li>
-          } @else {
-          <li class="flex items-center gap-1 bg-surface-2 px-1 rounded cursor-pointer pl-4 text-accent-orange"><span
-              class="text-muted text-[9px]">▼</span> robotic_arm_6dof</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
-              class="text-muted text-[9px]">○</span> base_link</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-main"><span
-              class="text-muted text-[9px]">▼</span> shoulder_joint</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-12 text-muted"><span
-              class="text-muted text-[9px]">○</span> upper_arm_link</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-12 text-main"><span
-              class="text-muted text-[9px]">▼</span> elbow_joint</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-16 text-accent-blue">
-            <span class="text-muted text-[9px]">○</span> end_effector_gripper</li>
-          }
-
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-4 text-main"><span
-              class="text-muted text-[9px]">▼</span> static_geometry</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
-              class="text-muted text-[9px]">○</span> floor_collision_mesh</li>
-          <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
-              class="text-muted text-[9px]">○</span> nav_obstacle_volume</li>
-        </ul>
-      </div>
-      }
-      @case ('properties') {
-      <div class="w-full h-full bg-surface-1 p-2 overflow-auto">
-        <div class="min-w-[240px]">
-          <div class="mb-4">
-            <div class="text-muted uppercase text-[10px] font-bold mb-1.5 border-b border-border pb-1">
-              Transform ({{ activeWorkspaceId() === 'ws-1' ? 'robot_agent_alpha' : 'robotic_arm_6dof' }})
-            </div>
-            <div class="grid grid-cols-4 gap-1 items-center mb-1">
-              <span class="text-muted text-[10px]">Location</span>
-              <input
-                class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-[10px]"
-                value="0.00" />
-              <input
-                class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-[10px]"
-                value="0.50" />
-              <input
-                class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-[10px]"
-                value="0.00" />
-            </div>
-          </div>
-          <div>
-            <div class="text-muted uppercase text-[10px] font-bold mb-1.5 border-b border-border pb-1">Sensors</div>
-            <div
-              class="flex items-center justify-between text-[11px] bg-surface-2 p-1.5 rounded mb-1 border border-border">
-              <span class="text-main">
-                {{ activeWorkspaceId() === 'ws-1' ? 'LiDAR Array' : 'Joint Encoders' }}
-              </span>
-              <div class="flex gap-2 items-center">
-                <span class="text-[9px] text-accent-green font-mono">
-                  {{ activeWorkspaceId() === 'ws-1' ? '10Hz' : '100Hz' }}
-                </span>
-                <input type="checkbox" checked />
-              </div>
-            </div>
-            <div
-              class="flex items-center justify-between text-[11px] bg-surface-2 p-1.5 rounded mb-1 border border-border">
-              <span class="text-main">IMU Drift</span>
-              <div class="flex gap-2 items-center">
-                <span class="text-[9px] text-accent-orange font-mono">0.017rad/s</span>
-              </div>
-            </div>
-            <div class="text-muted uppercase text-[10px] font-bold mb-1.5 mt-3 border-b border-border pb-1">Runtime
-              Budget</div>
-            <div class="grid grid-cols-2 gap-1 text-[10px] font-mono">
-              <span class="text-muted">Physics</span><span class="text-main text-right">4.3ms</span>
-              <span class="text-muted">Perception</span><span class="text-main text-right">7.2ms</span>
-              <span class="text-muted">Planning</span><span class="text-main text-right">2.9ms</span>
-              <span class="text-muted">GPU</span><span class="text-main text-right">78%</span>
-            </div>
-            @if (activeSceneId() === 'scene-2') {
-            <div class="text-muted uppercase text-[10px] font-bold mb-1.5 mt-3 border-b border-border pb-1">Joint
-              Angles</div>
-            <div class="space-y-1">
-              <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
-                <span class="text-muted text-[10px]">Shoulder</span>
-                <input type="range" min="-1.57" max="1.57" step="0.01" [value]="armJoints().shoulder"
-                  (input)="updateArmJoint('shoulder', $event)" />
-                <span class="text-main text-right font-mono text-[10px]">{{ armJoints().shoulder.toFixed(2) }}</span>
-              </div>
-              <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
-                <span class="text-muted text-[10px]">Elbow</span>
-                <input type="range" min="0" max="2.4" step="0.01" [value]="armJoints().elbow"
-                  (input)="updateArmJoint('elbow', $event)" />
-                <span class="text-main text-right font-mono text-[10px]">{{ armJoints().elbow.toFixed(2) }}</span>
-              </div>
-              <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
-                <span class="text-muted text-[10px]">Wrist</span>
-                <input type="range" min="-1.57" max="1.57" step="0.01" [value]="armJoints().wrist"
-                  (input)="updateArmJoint('wrist', $event)" />
-                <span class="text-main text-right font-mono text-[10px]">{{ armJoints().wrist.toFixed(2) }}</span>
-              </div>
-            </div>
-            }
-          </div>
-        </div>
-      </div>
-      }
-      @case ('terminal') {
-      <div
-        class="w-full h-full bg-surface-0 p-1.5 overflow-auto font-mono text-[10px] space-y-0.5 leading-tight whitespace-nowrap">
-        <div class="text-[9px] uppercase text-muted mb-1 tracking-wider">Job Orchestration / Event Log</div>
-        <div class="text-muted">[14:32:01.001] INFO Core - Initializing physics engine...</div>
-        <div class="text-muted">[14:32:01.042] INFO Workers - Spawned 128 thread pool workers.</div>
-        <div class="text-accent-green">[14:32:01.100] OK Sim - Simulation epoch 1420 ready.</div>
-        <div class="text-muted">[14:32:02.000] INFO Ai - Loading model weights (2.4GB)</div>
-
-        @if (activeWorkspaceId() === 'ws-1') {
-        <div class="text-accent-orange">[14:32:04.221] WARN Lidar - Dropped 12 packets from sensor eth0.</div>
-        <div class="text-accent-blue">[14:32:05.500] DATA Agent - Robot_Agent_Alpha telemetry streaming...</div>
-        } @else {
-        <div class="text-accent-blue">[14:32:04.221] CALIB Kinematics - Solving inverse kinematics chain.</div>
-        <div class="text-accent-orange">[14:32:05.500] WARN Joint - Shoulder_pitch reaching thermal limit.</div>
-        }
-      </div>
-      }
-      @case ('node_editor') {
-      <div class="w-full h-full overflow-auto bg-surface-1">
-        <div class="relative w-[1200px] h-[1200px]"
-          style="background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px;">
-          <div
-            class="absolute top-6 left-6 w-40 bg-surface-1 border border-border shadow-xl rounded-md flex flex-col text-[10px] z-10">
-            <div
-              class="bg-surface-2 px-2 py-1 font-bold rounded-t-md border-b border-border flex justify-between items-center">
-              <span class="text-main">
-                {{ activeWorkspaceId() === 'ws-1' ? 'LiDAR Stream' : 'Target Pose' }}
-              </span>
-              <span class="text-accent-green text-[8px]">LIVE</span>
-            </div>
-            <div class="p-1.5 space-y-1.5">
-              <div class="flex justify-between items-center">
-                <div class="w-2 h-2 rounded-full border border-muted bg-transparent"></div>
-                <span class="text-muted font-mono">
-                  {{ activeWorkspaceId() === 'ws-1' ? 'Point Cloud' : 'Transform Matrix' }}
-                </span>
-                <div class="w-2 h-2 rounded-full bg-accent-orange"></div>
-              </div>
-            </div>
-          </div>
-          <svg class="absolute inset-0 w-[1200px] h-[1200px] pointer-events-none z-0">
-            <path d="M 184 45 C 230 45, 230 110, 276 110" fill="transparent" stroke="var(--accent-orange)"
-              stroke-width="2" />
-          </svg>
-          <div
-            class="absolute top-20 left-[276px] w-40 bg-surface-1 border border-border shadow-xl rounded-md flex flex-col text-[10px] z-10">
-            <div
-              class="bg-surface-2 px-2 py-1 font-bold rounded-t-md border-b border-border flex justify-between items-center">
-              <span class="text-main">
-                {{ activeWorkspaceId() === 'ws-1' ? 'Collision Avoidance' : 'IK Solver' }}
-              </span>
-            </div>
-            <div class="p-1.5 space-y-1.5">
-              <div class="flex justify-between items-center">
-                <div class="w-2 h-2 rounded-full bg-accent-orange"></div>
-                <span class="text-muted font-mono text-left w-full ml-2">Input</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      }
-      }
+      <ng-container *ngTemplateOutlet="panelBody; context: { $implicit: node.panelType }"></ng-container>
     </div>
   </div>
+  }
+</ng-template>
+
+<ng-template #panelBody let-panelType>
+  @switch (panelType) {
+  @case ('viewport') {
+  <app-three-viewport class="w-full h-full block" [sceneId]="activeSceneId()"
+    [jointAngles]="armJoints()" [compact]="isMobile()"></app-three-viewport>
+  }
+  @case ('scene_graph') {
+  <div class="w-full h-full bg-surface-0 p-1.5 overflow-auto font-mono text-[11px] whitespace-nowrap">
+    <div class="text-[9px] uppercase text-muted mb-1 tracking-wider">Hierarchy / Scene Graph</div>
+    <ul class="space-y-px min-w-max">
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer text-main"><span
+          class="text-muted text-[9px]">▼</span> sim_environment_01</li>
+
+      @if (activeWorkspaceId() === 'ws-1') {
+      <li class="flex items-center gap-1 bg-surface-2 px-1 rounded cursor-pointer pl-4 text-accent-orange"><span
+          class="text-muted text-[9px]">▼</span> robot_agent_alpha</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
+          class="text-muted text-[9px]">○</span> chassis_mesh</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
+          class="text-muted text-[9px]">○</span> lidar_sensor_array</li>
+      } @else {
+      <li class="flex items-center gap-1 bg-surface-2 px-1 rounded cursor-pointer pl-4 text-accent-orange"><span
+          class="text-muted text-[9px]">▼</span> robotic_arm_6dof</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
+          class="text-muted text-[9px]">○</span> base_link</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-main"><span
+          class="text-muted text-[9px]">▼</span> shoulder_joint</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-12 text-muted"><span
+          class="text-muted text-[9px]">○</span> upper_arm_link</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-12 text-main"><span
+          class="text-muted text-[9px]">▼</span> elbow_joint</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-16 text-accent-blue">
+        <span class="text-muted text-[9px]">○</span> end_effector_gripper</li>
+      }
+
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-4 text-main"><span
+          class="text-muted text-[9px]">▼</span> static_geometry</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
+          class="text-muted text-[9px]">○</span> floor_collision_mesh</li>
+      <li class="flex items-center gap-1 hover:bg-surface-2 px-1 rounded cursor-pointer pl-8 text-muted"><span
+          class="text-muted text-[9px]">○</span> nav_obstacle_volume</li>
+    </ul>
+  </div>
+  }
+  @case ('properties') {
+  <div class="w-full h-full bg-surface-1 p-2 overflow-auto">
+    <div class="min-w-[240px]">
+      <div class="mb-4">
+        <div class="text-muted uppercase text-[10px] font-bold mb-1.5 border-b border-border pb-1">
+          Transform ({{ activeWorkspaceId() === 'ws-1' ? 'robot_agent_alpha' : 'robotic_arm_6dof' }})
+        </div>
+        <div class="grid grid-cols-4 gap-1 items-center mb-1">
+          <span class="text-muted text-[10px]">Location</span>
+          <input
+            class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-[10px]"
+            value="0.00" />
+          <input
+            class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-[10px]"
+            value="0.50" />
+          <input
+            class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-[10px]"
+            value="0.00" />
+        </div>
+      </div>
+      <div>
+        <div class="text-muted uppercase text-[10px] font-bold mb-1.5 border-b border-border pb-1">Sensors</div>
+        <div
+          class="flex items-center justify-between text-[11px] bg-surface-2 p-1.5 rounded mb-1 border border-border">
+          <span class="text-main">
+            {{ activeWorkspaceId() === 'ws-1' ? 'LiDAR Array' : 'Joint Encoders' }}
+          </span>
+          <div class="flex gap-2 items-center">
+            <span class="text-[9px] text-accent-green font-mono">
+              {{ activeWorkspaceId() === 'ws-1' ? '10Hz' : '100Hz' }}
+            </span>
+            <input type="checkbox" checked />
+          </div>
+        </div>
+        <div
+          class="flex items-center justify-between text-[11px] bg-surface-2 p-1.5 rounded mb-1 border border-border">
+          <span class="text-main">IMU Drift</span>
+          <div class="flex gap-2 items-center">
+            <span class="text-[9px] text-accent-orange font-mono">0.017rad/s</span>
+          </div>
+        </div>
+        <div class="text-muted uppercase text-[10px] font-bold mb-1.5 mt-3 border-b border-border pb-1">Runtime
+          Budget</div>
+        <div class="grid grid-cols-2 gap-1 text-[10px] font-mono">
+          <span class="text-muted">Physics</span><span class="text-main text-right">4.3ms</span>
+          <span class="text-muted">Perception</span><span class="text-main text-right">7.2ms</span>
+          <span class="text-muted">Planning</span><span class="text-main text-right">2.9ms</span>
+          <span class="text-muted">GPU</span><span class="text-main text-right">78%</span>
+        </div>
+        @if (activeSceneId() === 'scene-2') {
+        <div class="text-muted uppercase text-[10px] font-bold mb-1.5 mt-3 border-b border-border pb-1">Joint
+          Angles</div>
+        <div class="space-y-1">
+          <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
+            <span class="text-muted text-[10px]">Shoulder</span>
+            <input type="range" min="-1.57" max="1.57" step="0.01" [value]="armJoints().shoulder"
+              (input)="updateArmJoint('shoulder', $event)" />
+            <span class="text-main text-right font-mono text-[10px]">{{ armJoints().shoulder.toFixed(2) }}</span>
+          </div>
+          <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
+            <span class="text-muted text-[10px]">Elbow</span>
+            <input type="range" min="0" max="2.4" step="0.01" [value]="armJoints().elbow"
+              (input)="updateArmJoint('elbow', $event)" />
+            <span class="text-main text-right font-mono text-[10px]">{{ armJoints().elbow.toFixed(2) }}</span>
+          </div>
+          <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
+            <span class="text-muted text-[10px]">Wrist</span>
+            <input type="range" min="-1.57" max="1.57" step="0.01" [value]="armJoints().wrist"
+              (input)="updateArmJoint('wrist', $event)" />
+            <span class="text-main text-right font-mono text-[10px]">{{ armJoints().wrist.toFixed(2) }}</span>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+  @case ('terminal') {
+  <div
+    class="w-full h-full bg-surface-0 p-1.5 overflow-auto font-mono text-[10px] space-y-0.5 leading-tight whitespace-nowrap">
+    <div class="text-[9px] uppercase text-muted mb-1 tracking-wider">Job Orchestration / Event Log</div>
+    <div class="text-muted">[14:32:01.001] INFO Core - Initializing physics engine...</div>
+    <div class="text-muted">[14:32:01.042] INFO Workers - Spawned 128 thread pool workers.</div>
+    <div class="text-accent-green">[14:32:01.100] OK Sim - Simulation epoch 1420 ready.</div>
+    <div class="text-muted">[14:32:02.000] INFO Ai - Loading model weights (2.4GB)</div>
+
+    @if (activeWorkspaceId() === 'ws-1') {
+    <div class="text-accent-orange">[14:32:04.221] WARN Lidar - Dropped 12 packets from sensor eth0.</div>
+    <div class="text-accent-blue">[14:32:05.500] DATA Agent - Robot_Agent_Alpha telemetry streaming...</div>
+    } @else {
+    <div class="text-accent-blue">[14:32:04.221] CALIB Kinematics - Solving inverse kinematics chain.</div>
+    <div class="text-accent-orange">[14:32:05.500] WARN Joint - Shoulder_pitch reaching thermal limit.</div>
+    }
+  </div>
+  }
+  @case ('node_editor') {
+  <div class="w-full h-full overflow-auto bg-surface-1">
+    <div class="relative w-[1200px] h-[1200px]"
+      style="background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px;">
+      <div
+        class="absolute top-6 left-6 w-40 bg-surface-1 border border-border shadow-xl rounded-md flex flex-col text-[10px] z-10">
+        <div
+          class="bg-surface-2 px-2 py-1 font-bold rounded-t-md border-b border-border flex justify-between items-center">
+          <span class="text-main">
+            {{ activeWorkspaceId() === 'ws-1' ? 'LiDAR Stream' : 'Target Pose' }}
+          </span>
+          <span class="text-accent-green text-[8px]">LIVE</span>
+        </div>
+        <div class="p-1.5 space-y-1.5">
+          <div class="flex justify-between items-center">
+            <div class="w-2 h-2 rounded-full border border-muted bg-transparent"></div>
+            <span class="text-muted font-mono">
+              {{ activeWorkspaceId() === 'ws-1' ? 'Point Cloud' : 'Transform Matrix' }}
+            </span>
+            <div class="w-2 h-2 rounded-full bg-accent-orange"></div>
+          </div>
+        </div>
+      </div>
+      <svg class="absolute inset-0 w-[1200px] h-[1200px] pointer-events-none z-0">
+        <path d="M 184 45 C 230 45, 230 110, 276 110" fill="transparent" stroke="var(--accent-orange)"
+          stroke-width="2" />
+      </svg>
+      <div
+        class="absolute top-20 left-[276px] w-40 bg-surface-1 border border-border shadow-xl rounded-md flex flex-col text-[10px] z-10">
+        <div
+          class="bg-surface-2 px-2 py-1 font-bold rounded-t-md border-b border-border flex justify-between items-center">
+          <span class="text-main">
+            {{ activeWorkspaceId() === 'ws-1' ? 'Collision Avoidance' : 'IK Solver' }}
+          </span>
+        </div>
+        <div class="p-1.5 space-y-1.5">
+          <div class="flex justify-between items-center">
+            <div class="w-2 h-2 rounded-full bg-accent-orange"></div>
+            <span class="text-muted font-mono text-left w-full ml-2">Input</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
   }
 </ng-template>

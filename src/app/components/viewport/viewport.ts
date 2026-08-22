@@ -1,16 +1,16 @@
-import {
-	Component,
-	ElementRef,
-	ViewChild,
-	AfterViewInit,
-	OnDestroy,
-	OnChanges,
-	SimpleChanges,
-	Input,
-} from "@angular/core";
 import { CommonModule } from "@angular/common";
-import * as THREE from "three";
+import {
+	type AfterViewInit,
+	Component,
+	type ElementRef,
+	Input,
+	type OnChanges,
+	type OnDestroy,
+	type SimpleChanges,
+	ViewChild,
+} from "@angular/core";
 import CameraControls from "camera-controls";
+import * as THREE from "three";
 import { projectWorldToCanvas } from "./viewport.math";
 
 CameraControls.install({ THREE });
@@ -28,6 +28,7 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		elbow: 1.22,
 		wrist: 0.52,
 	};
+	@Input() compact = false;
 
 	@ViewChild("canvas", { static: true })
 	canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -44,6 +45,8 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 	private lastWidth = 0;
 	private lastHeight = 0;
 	private lastDpr = 0;
+
+	private dirLight!: THREE.DirectionalLight;
 
 	// Rover Assets
 	private roverGroup!: THREE.Group;
@@ -79,8 +82,12 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 	}
 
 	ngOnChanges(changes: SimpleChanges) {
-		if (changes["sceneId"] && this.scene) {
+		if (changes.sceneId && this.scene) {
 			this.updateSceneVisibility();
+		}
+		if (changes.compact && this.renderer) {
+			this.applyPerformanceMode();
+			this.updateViewportSize(true);
 		}
 	}
 
@@ -111,8 +118,8 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		this.renderer.domElement.style.height = "100%";
 		this.renderer.domElement.style.display = "block";
 		this.updateViewportSize();
-		this.renderer.shadowMap.enabled = true;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		this.applyPerformanceMode();
 
 		this.scene = new THREE.Scene();
 		this.scene.background = new THREE.Color("#24242a");
@@ -126,12 +133,12 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 		this.scene.add(ambientLight);
 
-		const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-		dirLight.position.set(5, 10, 7);
-		dirLight.castShadow = true;
-		dirLight.shadow.mapSize.width = 1024;
-		dirLight.shadow.mapSize.height = 1024;
-		this.scene.add(dirLight);
+		this.dirLight = new THREE.DirectionalLight(0xffffff, 2);
+		this.dirLight.position.set(5, 10, 7);
+		this.dirLight.castShadow = !this.compact;
+		this.dirLight.shadow.mapSize.width = 1024;
+		this.dirLight.shadow.mapSize.height = 1024;
+		this.scene.add(this.dirLight);
 
 		const fillLight = new THREE.DirectionalLight(0x4488ff, 1);
 		fillLight.position.set(-5, 3, -5);
@@ -366,7 +373,10 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		wristJoint.castShadow = true;
 		this.wrist.add(wristJoint);
 
-		const wristLink = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.48, 0.18), slateMat);
+		const wristLink = new THREE.Mesh(
+			new THREE.BoxGeometry(0.18, 0.48, 0.18),
+			slateMat,
+		);
 		wristLink.position.y = 0.24;
 		wristLink.castShadow = true;
 		this.wrist.add(wristLink);
@@ -454,7 +464,7 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		const rect = this.containerRef.nativeElement.getBoundingClientRect();
 		const width = Math.max(1, Math.round(rect.width));
 		const height = Math.max(1, Math.round(rect.height));
-		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		const dpr = Math.min(window.devicePixelRatio || 1, this.compact ? 1.25 : 2);
 
 		if (
 			!force &&
@@ -483,6 +493,14 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		this.camera.aspect = width / height;
 		this.camera.updateProjectionMatrix();
 		this.updateViewportDiagnostics(rect, dpr);
+	}
+
+	private applyPerformanceMode() {
+		if (!this.renderer) return;
+		this.renderer.shadowMap.enabled = !this.compact;
+		if (this.dirLight) {
+			this.dirLight.castShadow = !this.compact;
+		}
 	}
 
 	private updateViewportDiagnostics(rect: DOMRect, dpr: number) {

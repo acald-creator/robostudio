@@ -2,12 +2,20 @@ import { CommonModule } from "@angular/common";
 import {
 	Component,
 	computed,
-	ElementRef,
+	type ElementRef,
 	HostListener,
+	type OnDestroy,
 	signal,
 	ViewChild,
 } from "@angular/core";
 import { Viewport } from "./components/viewport/viewport";
+import {
+	MOBILE_TABS,
+	type MobileTab,
+	mobileMediaQuery,
+	mobileTabToPanelType,
+	panelTypeToMobileTab,
+} from "./mobile-shell";
 
 declare const THREE: any;
 
@@ -71,8 +79,13 @@ interface Command {
 	templateUrl: "./app.component.html",
 	styleUrl: "./app.component.css",
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
 	@ViewChild("paletteInput") paletteInputEl!: ElementRef<HTMLInputElement>;
+	readonly mobileTabs = MOBILE_TABS;
+	isMobile = signal(false);
+	mobileTab = signal<MobileTab>("view");
+	mobilePanelType = computed(() => mobileTabToPanelType(this.mobileTab()));
+	private mobileMql?: MediaQueryList;
 
 	// Layout State Definition Defaults
 	defaultSimTree: TreeNode = {
@@ -223,6 +236,25 @@ export class AppComponent {
 	});
 
 	tree = signal<TreeNode>(JSON.parse(JSON.stringify(this.defaultSimTree)));
+
+	constructor() {
+		if (typeof window === "undefined") return;
+		this.mobileMql = window.matchMedia(mobileMediaQuery());
+		this.isMobile.set(this.mobileMql.matches);
+		this.mobileMql.addEventListener("change", this.onMobileQueryChange);
+	}
+
+	ngOnDestroy() {
+		this.mobileMql?.removeEventListener("change", this.onMobileQueryChange);
+	}
+
+	private onMobileQueryChange = (event: MediaQueryListEvent) => {
+		this.isMobile.set(event.matches);
+	};
+
+	setMobileTab(tab: MobileTab) {
+		this.mobileTab.set(tab);
+	}
 
 	activePanelId = signal<string>("2");
 	private resizeState: {
@@ -487,10 +519,7 @@ export class AppComponent {
 		if (next) this.completeStep(next.id);
 	}
 
-	updateArmJoint(
-		joint: "shoulder" | "elbow" | "wrist",
-		event: Event,
-	) {
+	updateArmJoint(joint: "shoulder" | "elbow" | "wrist", event: Event) {
 		const value = Number.parseFloat((event.target as HTMLInputElement).value);
 		if (Number.isNaN(value)) return;
 		this.armJoints.update((prev) => ({ ...prev, [joint]: value }));
@@ -743,6 +772,7 @@ export class AppComponent {
 	}
 
 	private focusPanelByType(panelType: PanelType) {
+		this.mobileTab.set(panelTypeToMobileTab(panelType));
 		const leaf = this.findLeafByPanelType(this.tree(), panelType);
 		if (leaf) {
 			this.setFocus(leaf.id);
