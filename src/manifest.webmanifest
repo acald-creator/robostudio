@@ -4,8 +4,8 @@
 	"description": "Robotics workbench with a viewport-first mobile shell.",
 	"start_url": ".",
 	"display": "standalone",
-	"background_color": "#1f1e1c",
-	"theme_color": "#1f1e1c",
+	"background_color": "#070707",
+	"theme_color": "#070707",
 	"orientation": "any",
 	"icons": [
 		{

@@ -11,6 +11,7 @@ import {
 } from "@angular/core";
 import CameraControls from "camera-controls";
 import * as THREE from "three";
+import { type LinearRgb, readTokenRgb } from "../../theme";
 import { projectWorldToCanvas } from "./viewport.math";
 
 CameraControls.install({ THREE });
@@ -117,6 +118,13 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 			antialias: true,
 			alpha: false,
 		});
+		// Explicit rather than relying on the default. Display-P3 output is not
+		// available: three@0.184 exports no DisplayP3ColorSpace and its build
+		// contains no display-p3 support at all, so the canvas stays sRGB while
+		// the surrounding chrome can go wide-gamut. Tokens are gamut-clamped on
+		// the way in (see theme.ts) so nothing clips. Tracked as C8.
+		this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
 		this.renderer.domElement.style.width = "100%";
 		this.renderer.domElement.style.height = "100%";
 		this.renderer.domElement.style.display = "block";
@@ -125,8 +133,11 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		this.applyPerformanceMode();
 
 		this.scene = new THREE.Scene();
-		this.scene.background = new THREE.Color("#24242a");
-		this.scene.fog = new THREE.FogExp2("#24242a", 0.04);
+		this.scene.background = this.token("--scene-bg", 0x111111);
+		this.scene.fog = new THREE.FogExp2(
+			this.token("--scene-bg", 0x111111).getHex(),
+			0.04,
+		);
 
 		this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
 		this.updateViewportSize();
@@ -143,11 +154,19 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		this.dirLight.shadow.mapSize.height = 1024;
 		this.scene.add(this.dirLight);
 
-		const fillLight = new THREE.DirectionalLight(0x4488ff, 1);
+		const fillLight = new THREE.DirectionalLight(
+			this.token("--scene-fill-light", 0xaeb9c4),
+			0.8,
+		);
 		fillLight.position.set(-5, 3, -5);
 		this.scene.add(fillLight);
 
-		const grid = new THREE.GridHelper(20, 20, 0x4a4a5a, 0x2c2c36);
+		const grid = new THREE.GridHelper(
+			20,
+			20,
+			this.token("--scene-grid-major", 0x363636),
+			this.token("--scene-grid-minor", 0x191919),
+		);
 		grid.position.y = -0.01;
 		this.scene.add(grid);
 
@@ -215,27 +234,45 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		);
 	}
 
+	/**
+	 * Resolves a design token to a Three.js colour. Falls back to the supplied
+	 * hex if the property is missing, so the scene still builds if the stylesheet
+	 * has not applied yet. See src/app/theme.ts.
+	 */
+	private token(name: string, fallback: number): THREE.Color {
+		const host = this.containerRef?.nativeElement ?? document.documentElement;
+		const rgb: LinearRgb | null = readTokenRgb(host, name);
+		return rgb
+			? new THREE.Color().setRGB(
+					rgb[0],
+					rgb[1],
+					rgb[2],
+					THREE.LinearSRGBColorSpace,
+				)
+			: new THREE.Color(fallback);
+	}
+
 	private buildRover() {
 		this.roverGroup = new THREE.Group();
 
 		const orangeMat = new THREE.MeshStandardMaterial({
-			color: 0xff6600,
+			color: this.token("--brand", 0xec7c0e),
 			roughness: 0.2,
 			metalness: 0.1,
 		});
 		const slateMat = new THREE.MeshStandardMaterial({
-			color: 0x8a8a98,
+			color: this.token("--scene-part-light", 0x737373),
 			roughness: 0.1,
 			metalness: 0.2,
 		});
 		const darkMat = new THREE.MeshStandardMaterial({
-			color: 0x1f1f26,
+			color: this.token("--scene-part-dark", 0x0d0d0d),
 			roughness: 0.8,
 			metalness: 0.5,
 		});
 		const glowMat = new THREE.MeshStandardMaterial({
-			color: 0x00aaff,
-			emissive: 0x00aaff,
+			color: this.token("--selected", 0x42a3fd),
+			emissive: this.token("--selected", 0x42a3fd),
 			emissiveIntensity: 2,
 		});
 
@@ -297,23 +334,23 @@ export class Viewport implements AfterViewInit, OnDestroy, OnChanges {
 		this.armGroup = new THREE.Group();
 
 		const orangeMat = new THREE.MeshStandardMaterial({
-			color: 0xc87a2a,
+			color: this.token("--brand", 0xec7c0e),
 			roughness: 0.5,
 			metalness: 0.35,
 		});
 		const slateMat = new THREE.MeshStandardMaterial({
-			color: 0x667a68,
+			color: this.token("--scene-part-mid", 0x5c5c5c),
 			roughness: 0.62,
 			metalness: 0.18,
 		});
 		const darkMat = new THREE.MeshStandardMaterial({
-			color: 0x1f1f26,
+			color: this.token("--scene-part-dark", 0x0d0d0d),
 			roughness: 0.8,
 			metalness: 0.5,
 		});
 		const glowMat = new THREE.MeshStandardMaterial({
-			color: 0x00aaff,
-			emissive: 0x00aaff,
+			color: this.token("--selected", 0x42a3fd),
+			emissive: this.token("--selected", 0x42a3fd),
 			emissiveIntensity: 2,
 		});
 

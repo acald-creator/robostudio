@@ -1,0 +1,165 @@
+/* Mobile shell primitives.
+   Spacing is expressed against the shared --spacing scale (0.25rem) so the mobile
+   shell and the utility-driven desktop chrome cannot drift apart — previously it
+   used hardcoded px sharing no values with the scale at all.
+
+   Touch-target sizes (44px, 52px, 36px) stay literal on purpose: they are
+   accessibility minimums, not spacing, and should not scale with the layout.
+   Shared by AppComponent and the design-system reference page, so the page
+   cannot render a stale copy. Angular scopes each consumer separately.
+   Consumes the :root tokens from uno.config.ts preflights. */
+.mobile-shell {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	padding-top: env(safe-area-inset-top);
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+	background: var(--surface-0);
+}
+
+.mobile-topbar {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--spacing) * 2);
+	min-height: 52px;
+	padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
+	border-bottom: 1px solid var(--border);
+	flex: none;
+}
+
+.mobile-mark {
+	width: 32px;
+	height: 32px;
+	border-radius: calc(var(--spacing) * 1.5);
+	background: var(--brand);
+	color: var(--surface-0);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 700;
+	flex: none;
+}
+
+.mobile-scene-select {
+	flex: 1;
+	min-width: 0;
+	min-height: 44px;
+	padding: 0 calc(var(--spacing) * 3);
+	font-size: 13px;
+	touch-action: manipulation;
+}
+
+.mobile-icon-btn {
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--border);
+	border-radius: calc(var(--spacing) * 2);
+	background: var(--surface-1);
+	color: var(--text-main);
+	flex: none;
+	touch-action: manipulation;
+}
+
+.mobile-workspace-row {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--spacing) * 1.5);
+	padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
+	overflow-x: auto;
+	flex: none;
+	border-bottom: 1px solid var(--border);
+}
+
+.mobile-ws-chip {
+	flex: none;
+	min-height: 36px;
+	padding: 0 calc(var(--spacing) * 2.5);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--surface-1);
+	color: var(--text-muted);
+	font-size: 11px;
+	white-space: nowrap;
+	touch-action: manipulation;
+}
+
+.mobile-ws-chip.is-active {
+	color: var(--selected);
+	border-color: var(--selected);
+}
+
+.mobile-status {
+	margin-left: auto;
+	font-family: "JetBrains Mono", ui-monospace, monospace;
+	font-size: 10px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.mobile-main {
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	position: relative;
+}
+
+.mobile-nav {
+	display: flex;
+	flex: none;
+	border-top: 1px solid var(--border);
+	background: var(--surface-0);
+	padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-nav-btn {
+	flex: 1;
+	min-height: 52px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--spacing) * 0.5);
+	color: var(--text-muted);
+	font-size: 10px;
+	touch-action: manipulation;
+}
+
+.mobile-nav-icon {
+	font-size: 16px;
+	line-height: 1;
+}
+
+.mobile-nav-btn.is-active {
+	color: var(--selected);
+}
+
+.is-mobile .palette-esc {
+	display: none;
+}
+
+.is-mobile .palette-overlay {
+	padding-top: max(calc(var(--spacing) * 3), env(safe-area-inset-top));
+	align-items: stretch;
+}
+
+.is-mobile .palette-panel {
+	max-width: none;
+	margin: 0 calc(var(--spacing) * 2.5);
+}
+
+.is-mobile .palette-cmd {
+	min-height: 44px;
+}
+
+.is-mobile input[type="range"] {
+	min-height: 32px;
+}

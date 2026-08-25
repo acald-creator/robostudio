@@ -4,50 +4,50 @@
     <!-- Overlay UI -->
     @if (!compact) {
     <div class="absolute top-2 left-2 pointer-events-none z-10 flex flex-col gap-1">
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">CAM:
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-ui border border-border">CAM:
             MAIN_ORBIT</span>
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-ui border border-border">
             {{ sceneId === 'scene-1' ? 'LIDAR: ACTIVE (10Hz)' : (sceneId === 'scene-2' ? 'KINEMATICS: SOLVING' :
             'FAMILIAR: IDLE AURA') }}
         </span>
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[10px] border border-border">
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-ui border border-border">
             ZOOM: {{ zoomPercent }}%
         </span>
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[9px] border border-border">
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-micro border border-border">
             LAYOUT: {{ layoutLocation }}
         </span>
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[9px] border border-border">
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-micro border border-border">
             CONTAINER: {{ containerSizeLabel }} | CANVAS: {{ canvasCssSizeLabel }}
         </span>
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[9px] border border-border">
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-micro border border-border">
             BUFFER: {{ renderBufferSizeLabel }} | DPR: {{ dprLabel }}
         </span>
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[9px] border border-border">
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-micro border border-border">
             TARGET: {{ targetScreenLabel }} | CENTER_ERR(px): {{ centerErrorLabel }}
         </span>
     </div>
     <div class="absolute bottom-2 right-2 pointer-events-none z-10">
-        <span class="font-mono text-muted bg-surface-0-80 px-1.5 py-0.5 rounded text-[9px] border border-border">ENGINE:
+        <span class="font-mono text-muted bg-surface-0/80 px-1.5 py-0.5 rounded text-micro border border-border">ENGINE:
             THREE.JS | SHADERS: COMPILED</span>
     </div>
     }
 
     <div class="absolute z-10 pointer-events-auto flex items-center gap-1 viewport-zoom-bar"
         [class.viewport-zoom-bar-compact]="compact">
-        <button
-            class="font-mono text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
+        <button type="button"
+            class="font-mono text-control opacity-75 bg-surface-0/80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
             (click)="zoomIn()"
             title="Zoom In">
             +
         </button>
-        <button
-            class="font-mono text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
+        <button type="button"
+            class="font-mono text-control opacity-75 bg-surface-0/80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
             (click)="zoomOut()"
             title="Zoom Out">
             -
         </button>
-        <button
-            class="font-mono text-control opacity-75 bg-surface-0-80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
+        <button type="button"
+            class="font-mono text-control opacity-75 bg-surface-0/80 border border-border rounded hover:bg-surface-2 hover:text-main hover:opacity-100 viewport-zoom-btn"
             (click)="resetView()"
             title="Reset View to Grid">
             Reset
