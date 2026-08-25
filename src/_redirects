@@ -1,0 +1,4 @@
+# SPA fallback. The design system reference is reached at /design, which is a
+# client-side path — without this it 404s, because no such file exists.
+# 200 (not 301) so the URL is preserved for the app to read.
+/*    /index.html   200
