@@ -20,7 +20,7 @@ export const MOBILE_TABS: readonly MobileTabItem[] = [
 	{ id: "scene", label: "Scene", icon: "☰" },
 	{ id: "inspect", label: "Inspect", icon: "▣" },
 	{ id: "log", label: "Log", icon: "≡" },
-	{ id: "graph", label: "Graph", icon: " automatisch" },
+	{ id: "graph", label: "Graph", icon: "⬡" },
 ];
 
 const TAB_TO_PANEL: Record<MobileTab, MobilePanelType> = {

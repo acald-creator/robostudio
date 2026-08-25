@@ -1,0 +1,46 @@
+name: CI
+
+# Least privilege: this workflow only reads the repo.
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Single source of truth, also read by Cloudflare Pages' build image.
+          # Node 20 reached end of life in April 2026; Angular 20 supports
+          # ^20.19 || ^22.12 || ^24.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # The production build is the meaningful gate. UnoCSS now runs inside it
+      # via @unocss/postcss, so a template using a class that generates no CSS
+      # is caught here rather than shipping silently — which is exactly how
+      # nine utilities went missing before.
+      - run: npm run build
+
+      - run: npm test
+
+      # The design system route is a client-side path. Without the _redirects
+      # SPA fallback in the build output it 404s on Cloudflare Pages, and that
+      # is not something the build itself would notice.
+      - name: Verify SPA fallback ships
+        run: test -f dist/robostudio/browser/_redirects

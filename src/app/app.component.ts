@@ -78,7 +78,7 @@ interface Command {
 	selector: "app-root",
 	imports: [CommonModule, Viewport],
 	templateUrl: "./app.component.html",
-	styleUrl: "./app.component.css",
+	styleUrls: ["./app.component.css", "./mobile-shell.css"],
 })
 export class AppComponent implements OnDestroy {
 	@ViewChild("paletteInput") paletteInputEl!: ElementRef<HTMLInputElement>;

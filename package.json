@@ -8,9 +8,7 @@
 		"watch": "ng build --watch --configuration development",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"tauri": "tauri",
-		"dev:css": "unocss --watch",
-		"build:css": "unocss"
+		"tauri": "tauri"
 	},
 	"private": true,
 	"dependencies": {
@@ -38,6 +36,7 @@
 		"@tauri-apps/cli": "^2",
 		"@types/node": "^25.9.1",
 		"@types/three": "^0.184.1",
+		"@unocss/postcss": "^66.7.0",
 		"jsdom": "^29.1.1",
 		"typescript": "~5.8.3",
 		"unocss": "^66.7.0",

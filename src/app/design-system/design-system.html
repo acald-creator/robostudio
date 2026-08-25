@@ -1,0 +1,356 @@
+<div class="ds-root bg-surface-0 text-main">
+
+  <header class="ds-head">
+    <p class="ds-eyebrow font-mono mb-6">RoboStudio · design system</p>
+    <h1 class="ds-h1">Everything the workbench is made of</h1>
+    <p class="ds-lede text-muted">
+      Rendered through the real UnoCSS pipeline against the real <code>:root</code> tokens — change a
+      value in <code>uno.config.ts</code> and this page changes with it. Known defects are marked
+      <span class="ds-flag">like this</span> rather than rendered as if correct.
+    </p>
+  </header>
+
+
+  <div class="sticky top-0 z-10 py-3 border-b border-border bg-surface-0/90 backdrop-blur-sm flex items-center gap-3 flex-wrap">
+    <span class="font-mono text-ui uppercase text-control">Palette</span>
+    <div class="flex gap-0.5 bg-surface-1 border border-border rounded p-0.5">
+      @for (id of paletteIds; track id) {
+      <button type="button" class="font-mono text-ui px-2 py-1 rounded cursor-pointer border-none bg-transparent"
+        [class]="palette() === id ? 'bg-surface-3 text-main' : 'text-control hover:text-main hover:bg-surface-2'"
+        [attr.aria-pressed]="palette() === id"
+        (click)="setPalette(id)">{{ labelFor(id) }}</button>
+      }
+    </div>
+    <span class="font-mono text-ui text-control">{{ active().note }}</span>
+  </div>
+
+  <!-- ─────────────── surfaces ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">01</span> Surfaces</h2>
+    <p class="ds-note text-muted">The <span class="font-mono">R−B</span> figure is the 8-bit red-minus-blue channel spread — how much hue actually survives quantisation. Below about 8 a cast reads as neutral grey to most eyes, however it was authored.</p>
+
+    <div class="ds-swatches grid gap-4">
+      @for (s of active().surfaces; track s.name) {
+      <div class="ds-swatch-card grid gap-2">
+        <div class="ds-swatch" [style.background]="s.hex"></div>
+        <div class="ds-swatch-meta grid font-mono text-ui">
+          <span class="text-main">{{ s.name }}</span>
+          <span class="text-muted">oklch({{ s.ch }})</span>
+          <span class="text-control">{{ s.hex }}</span>
+          @if (active().neutral) {
+          <span class="text-control">neutral by design</span>
+          } @else {
+          <span [class]="s.rb >= 8 ? 'ds-lc ds-lc-pass' : 'ds-lc ds-lc-fail'">R−B {{ s.rb }}</span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    <p class="ds-caveat font-mono text-control">
+      All five sit below APCA's black clamp (Y &lt; 0.022), so darkening the ground buys no contrast —
+      only the text side can. And no gradients across adjacent surfaces in any palette — the steps are too close to band cleanly.
+    </p>
+  </section>
+
+  <!-- ─────────────── text ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">02</span> Text tokens</h2>
+    <p class="ds-note text-muted">APCA Lc against each surface. Floors: 90 preferred body · 75 min body · 60 larger · 45 large/bold · 30 non-text.</p>
+
+    <div class="ds-table grid">
+      <div class="ds-tr ds-th font-mono grid-cols-[1.5fr_2fr_1fr_.7fr_.7fr_.7fr]">
+        <span>token</span><span>sample</span><span>hex</span>
+        <span class="text-right">on s-0</span><span class="text-right">on s-1</span><span class="text-right">on s-2</span>
+      </div>
+      @for (t of textTokens; track t.name) {
+      <div class="ds-tr grid-cols-[1.5fr_2fr_1fr_.7fr_.7fr_.7fr]">
+        <span class="font-mono ds-tok flex items-center gap-2 flex-wrap">
+          {{ t.name }}
+          @if (t.flag) { <span class="ds-flag">{{ t.flag }}</span> }
+        </span>
+        <span class="text-ui" [style.color]="t.hex">Inverse kinematics 1420</span>
+        <span class="font-mono text-control">{{ t.hex }}</span>
+        @for (v of t.lc; track $index) {
+        <span class="text-right font-mono ds-lc" [class]="'ds-lc-' + lcTier(v)">{{ v.toFixed(1) }}</span>
+        }
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ─────────────── roles ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">03</span> Roles</h2>
+    <p class="ds-note text-muted">
+      One colour per meaning. <span class="font-mono text-main">brand</span> is identity only and never a
+      status; the four semantics are conventional so log levels read without being learned. Previously a
+      single orange carried the app mark, the running-state readout and every WARN line at once.
+    </p>
+
+    <div class="ds-swatches grid gap-4">
+      @for (r of active().roles; track r.name) {
+      <div class="ds-swatch-card grid gap-2">
+        <div class="ds-swatch" [style.background]="r.hex"></div>
+        <div class="ds-swatch-meta grid font-mono text-ui">
+          <span class="text-main">{{ r.name }}</span>
+          <span class="text-muted">oklch({{ r.ch }})</span>
+          <span class="text-control">{{ r.hex }}</span>
+          <span class="ds-lc" [class]="'ds-lc ds-lc-' + lcTier(r.lc2)">Lc {{ r.lc2 }} on surface-2</span>
+        </div>
+      </div>
+      }
+    </div>
+
+
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Wide gamut</h3>
+    <div class="ds-table ds-table-4 grid">
+      <div class="ds-tr ds-th font-mono grid-cols-[2fr_1fr_1fr_1fr]"><span>accent</span><span class="text-right">sRGB C</span><span class="text-right">P3 C</span><span class="text-right">P3 ceiling</span></div>
+      @for (p of p3; track p.name) {
+      <div class="ds-tr grid-cols-[2fr_1fr_1fr_1fr]">
+        <span class="font-mono ds-tok flex items-center gap-2 flex-wrap">{{ p.name }}</span>
+        <span class="text-right font-mono text-muted">{{ p.srgb }}</span>
+        <span class="text-right font-mono text-main">{{ p.p3 }}</span>
+        <span class="text-right font-mono text-control">{{ p.ceiling }}</span>
+      </div>
+      }
+    </div>
+    <p class="ds-caveat font-mono text-control">
+      If your display is P3, the swatches are already showing the lifted chroma — each clamped to its own
+      hue's ceiling. accent-blue's sRGB value sits at 98% of its ceiling; it cannot go higher.
+      Red is the lowest-luminance hue, so a dark "serious" red can never carry much contrast —
+      errors should lean on the badge, not the hue.
+    </p>
+  </section>
+
+  <!-- ─────────────── type ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">04</span> Type scale, as it actually is</h2>
+    <p class="ds-note text-muted">Seven sizes on desktop, four of them arbitrary px escapes; six more, entirely separate, in the mobile shell.</p>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Desktop <span class="text-control font-mono">— utilities</span></h3>
+    <div class="ds-typelist grid">
+      @for (t of desktopType; track t.label) {
+      <div class="ds-typerow grid items-baseline">
+        <div class="ds-typemeta grid font-mono text-ui">
+          <span class="text-main">{{ t.label }}</span>
+          <span class="text-control">{{ t.px }}px · {{ t.uses }} uses</span>
+          <span class="text-control">{{ t.where }}</span>
+          @if (t.flag) { <span class="ds-flag">{{ t.flag }}</span> }
+        </div>
+        <div class="ds-specimen" [style.font-size.px]="t.px">
+          Solving inverse kinematics chain — end_effector_gripper 0.52 rad
+        </div>
+      </div>
+      }
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Mobile shell <span class="text-control font-mono">— hand-written CSS, no shared values</span></h3>
+    <div class="ds-typelist grid">
+      @for (t of mobileType; track t.label) {
+      <div class="ds-typerow grid items-baseline">
+        <div class="ds-typemeta grid font-mono text-ui">
+          <span class="text-main">{{ t.label }}</span>
+          <span class="text-control">{{ t.px }}px</span>
+          <span class="text-control">{{ t.where }}</span>
+          @if (t.flag) { <span class="ds-flag">under 16px — iOS zooms on focus</span> }
+        </div>
+        <div class="ds-specimen" [style.font-size.px]="t.px">
+          Solving inverse kinematics chain — end_effector_gripper 0.52 rad
+        </div>
+      </div>
+      }
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Families</h3>
+    <div class="ds-families grid gap-4">
+      <div class="ds-family grid gap-2">
+        <p class="ds-family-name font-mono text-main text-ui">IBM Plex Sans</p>
+        <p class="ds-family-sample">Simulation viewport · Robot agent alpha</p>
+        <p class="ds-family-weights font-mono text-control">400 loaded · 500 loaded, unused · 600 loaded, unused</p>
+        <p class="ds-family-weights flex items-baseline gap-2 flex-wrap text-ui"><span class="ds-flag">T5</span> <span class="font-mono text-control">font-semibold asks for 700, which is not loaded → faux bold</span></p>
+      </div>
+      <div class="ds-family grid gap-2">
+        <p class="ds-family-name font-mono text-main text-ui">JetBrains Mono</p>
+        <p class="ds-family-sample font-mono">[14:32:01.100] OK Sim — epoch 1420</p>
+        <p class="ds-family-weights font-mono text-control">400 + 500 loaded</p>
+        <p class="ds-family-weights flex items-baseline gap-2 flex-wrap text-ui"><span class="ds-flag">T4</span> <span class="font-mono text-control">the line above uses font-mono, so it is rendering in Menlo, not JetBrains Mono</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── spacing & radius ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">05</span> Spacing &amp; radius</h2>
+    <p class="ds-note text-muted">The utility scale is rem-based and consistent. The mobile shell uses none of it.</p>
+
+    <div class="ds-spacelist grid">
+      @for (s of spacing; track s.cls) {
+      <div class="ds-spacerow grid gap-4 items-center grid-cols-[60px_130px_1fr_90px]">
+        <span class="font-mono text-main text-ui">{{ s.cls }}</span>
+        <span class="font-mono text-control">{{ s.rem }} · {{ s.px }}px</span>
+        <div class="ds-spacebar bg-accent-orange" [style.width.px]="s.px * 4"></div>
+        <span class="font-mono text-control text-right">{{ s.uses }} uses</span>
+      </div>
+      }
+    </div>
+
+    <p class="ds-caveat font-mono text-control">
+      <span class="ds-flag">mobile</span> hardcoded px, sharing nothing with the scale above:
+      {{ mobileSpacing.join(' · ') }}
+    </p>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Radius</h3>
+    <div class="ds-radii flex gap-4 flex-wrap">
+      @for (r of radii; track r.cls) {
+      <div class="ds-radius-card grid gap-1">
+        <div class="w-16 h-16 bg-surface-2 border border-border" [style.border-radius]="r.value"></div>
+        <span class="font-mono text-main">{{ r.cls }}</span>
+        <span class="font-mono text-control">{{ r.value }} · {{ r.uses }}×</span>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ─────────────── breakpoints ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">06</span> Breakpoints</h2>
+    <p class="ds-note text-muted">Three of them, defined in three places, none agreeing.</p>
+    <div class="ds-table ds-table-3 grid">
+      <div class="ds-tr ds-th font-mono grid-cols-[1.2fr_1fr_2fr]"><span>defined in</span><span>value</span><span>governs</span></div>
+      @for (b of breakpoints; track b.name) {
+      <div class="ds-tr grid-cols-[1.2fr_1fr_2fr]">
+        <span class="font-mono ds-tok flex items-center gap-2 flex-wrap">{{ b.name }} @if (b.flag) { <span class="ds-flag">!</span> }</span>
+        <span class="font-mono text-main">{{ b.value }}</span>
+        <span class="text-muted">{{ b.used }}</span>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- ─────────────── primitives ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">07</span> Component primitives</h2>
+    <p class="ds-note text-muted">Live chrome, built from the same utilities the workbench uses.</p>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Menu bar</h3>
+    <div class="ds-demo">
+      <div class="h-6 flex-none bg-surface-0 border border-border flex items-center justify-between px-2 text-ui tracking-wide uppercase">
+        <div class="flex items-center gap-3 text-muted">
+          <span class="text-main">File</span><span>Edit</span><span>View</span><span>Sim</span><span>Robotics</span>
+        </div>
+        <div class="flex items-center gap-2 font-mono text-micro">
+          <span class="px-1 py-0.5 border border-border rounded text-accent-green">LIVE</span>
+          <span class="text-muted">BUILD: tauri-dev</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Panel header <span class="ds-flag">B4 — renders 26px, not 24px</span></h3>
+    <div class="ds-demo">
+      <div class="h-6 flex-none bg-surface-1 flex items-center justify-between px-1.5 border-b border-border select-none">
+        <span class="text-main text-ui uppercase font-semibold tracking-wider">Properties</span>
+        <div class="flex items-center gap-0.5">
+          <button type="button" class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-ui">←</button>
+          <button type="button" class="w-5 h-5 flex items-center justify-center text-control opacity-75 hover:bg-surface-2 hover:text-main hover:opacity-100 rounded text-ui">◫</button>
+          <button type="button" class="w-5 h-5 flex items-center justify-center hover:bg-[#4a1515] hover:text-[#ff8888] rounded text-ui">✕</button>
+        </div>
+      </div>
+    </div>
+    <p class="ds-caveat font-mono text-control"><span class="ds-flag">C9</span> those buttons are text-control at opacity-75 — Lc 23.4. <span class="ds-flag">C10</span> the close hover is a hardcoded hex.</p>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Workspace tabs <span class="ds-flag">W5 — px-1 against a flush border below</span></h3>
+    <div class="ds-demo">
+      <div class="h-7 flex-none flex items-end px-1 gap-0.5 text-ui font-mono select-none">
+        <div class="px-4 py-1.5 rounded-t cursor-pointer border border-b-0 flex items-center gap-2 bg-surface-0 border-border text-accent-blue">
+          <span class="opacity-70">◈</span><span class="font-semibold">Perception</span>
+        </div>
+        <div class="px-4 py-1.5 rounded-t cursor-pointer border border-b-0 flex items-center gap-2 bg-surface-1 border-transparent text-muted hover:text-main hover:bg-surface-2">
+          <span class="opacity-70">◇</span><span>Kinematics</span>
+        </div>
+        <div class="flex-1 border-b border-border h-full"></div>
+      </div>
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Fields &amp; controls <span class="text-control font-mono">— at real panel width, 288px</span></h3>
+    <div class="ds-demo">
+      <!-- constrained to the real side-column width (260-310px at 1440-1600) so the
+           specimen represents how these actually render, not stretched to the page -->
+      <div class="bg-surface-1 p-2 max-w-72">
+      <div class="text-muted uppercase text-ui font-semibold mb-1.5 border-b border-border pb-1">Transform</div>
+      <div class="grid grid-cols-4 gap-1 items-center mb-1">
+        <span class="text-muted text-ui">Location</span>
+        <input class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-ui" value="0.00" />
+        <input class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-ui" value="0.50" />
+        <input class="w-full bg-surface-0 border border-border px-1 py-0.5 rounded text-main text-center font-mono text-ui" value="0.00" />
+      </div>
+      <div class="grid grid-cols-[52px_1fr_44px] gap-2 items-center">
+        <span class="text-muted text-ui">Shoulder</span>
+        <input type="range" min="-157" max="157" value="-28" />
+        <span class="text-main text-right font-mono text-ui">-0.28</span>
+      </div>
+      </div>
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Log stream</h3>
+    <div class="ds-demo">
+      <div class="w-full bg-surface-0 p-1.5 font-mono text-prose space-y-0.5 whitespace-nowrap overflow-x-auto">
+        <div class="text-muted">[14:32:01.042] INFO Workers - Spawned 128 thread pool workers.</div>
+        <div class="text-accent-green">[14:32:01.100] OK Sim - Simulation epoch 1420 ready.</div>
+        <div [style.color]="'var(--warn)'">[14:32:05.500] WARN Joint - Shoulder_pitch reaching thermal limit.</div>
+        <div [style.color]="'var(--error)'">[14:32:06.010] ERROR Driver - Encoder timeout on joint 3.</div>
+        <div class="text-accent-blue">[14:32:04.221] CALIB Kinematics - Solving inverse kinematics chain.</div>
+      </div>
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Status bar</h3>
+    <div class="ds-demo">
+      <div class="h-5 flex-none bg-surface-0 border-t border-border flex items-center px-2 text-micro font-mono text-muted justify-between">
+        <div class="flex gap-4">
+          <span class="text-accent-orange font-semibold">SIM_RUNNING</span><span>EPOCH: 1420</span><span>WORKERS: 128/128</span>
+        </div>
+        <div class="flex gap-4"><span>MEM: 12.4GB</span><span>ROBOT_FPS: 60.0</span></div>
+      </div>
+    </div>
+
+    <h3 class="ds-h3 flex items-baseline gap-2 flex-wrap">Mobile primitives <span class="ds-flag">separate CSS, separate scales</span></h3>
+    <div class="ds-demo flex">
+      <div class="ds-mobile-frame">
+        <header class="mobile-topbar">
+          <div class="mobile-mark">R</div>
+          <select class="mobile-scene-select"><option>Perception Sandbox</option></select>
+          <button type="button" class="mobile-icon-btn">▶</button>
+        </header>
+        <div class="mobile-workspace-row">
+          <button type="button" class="mobile-ws-chip is-active">◈ Perception</button>
+          <button type="button" class="mobile-ws-chip">◇ Kinematics</button>
+          <span class="mobile-status">draft · 40%</span>
+        </div>
+        <nav class="mobile-nav">
+          <button type="button" class="mobile-nav-btn is-active"><span class="mobile-nav-icon">◉</span><span>View</span></button>
+          <button type="button" class="mobile-nav-btn"><span class="mobile-nav-icon">☰</span><span>Scene</span></button>
+          <button type="button" class="mobile-nav-btn"><span class="mobile-nav-icon">▣</span><span>Inspect</span></button>
+          <button type="button" class="mobile-nav-btn"><span class="mobile-nav-icon">⬡</span><span>Graph</span></button>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── ledger ─────────────── -->
+  <section class="ds-section">
+    <h2 class="ds-h2 flex items-baseline gap-3"><span class="ds-num font-mono">08</span> Open defects</h2>
+    <p class="ds-note text-muted">Everything flagged above, plus what isn't visible on this page. Full ledger in <code>docs/DESIGN_SYSTEM.md</code>.</p>
+    <ul class="ds-issues grid">
+      @for (i of issues; track i.id) {
+      <li class="ds-issue grid gap-4 items-baseline grid-cols-[62px_1fr]">
+        <span class="ds-issue-id font-mono text-ui">{{ i.id }}</span>
+        <span class="ds-issue-text text-muted">{{ i.text }}</span>
+      </li>
+      }
+    </ul>
+  </section>
+
+  <footer class="ds-foot font-mono text-control text-ui">
+    Rendered from the live tokens. APCA 0.1.9 against the real surfaces; gamut ceilings by binary search in OKLCH.
+  </footer>
+</div>
