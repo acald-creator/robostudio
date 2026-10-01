@@ -18,7 +18,7 @@
 		"@angular/compiler": "^20.1.4",
 		"@angular/core": "^20.1.4",
 		"@angular/forms": "^20.1.4",
-		"@angular/platform-browser": "^20.1.4",
+		"@angular/platform-browser": "^22.1.2",
 		"@angular/router": "^20.1.4",
 		"@fontsource/ibm-plex-sans": "^5.2.8",
 		"@fontsource/jetbrains-mono": "^5.2.8",
